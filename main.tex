@@ -1,13 +1,56 @@
-\documentclass[letter,twocolumn,10pt]{article}
+\documentclass[letter,twocolumn,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{natbib}
-\usepackage[table]{xcolor}
+\usepackage{courier}
+\usepackage[margin=1in]{geometry}
+\usepackage[table,svgnames]{xcolor}
 \usepackage{multirow}
 \usepackage{tabu}
+\usepackage{float}
+\usepackage{listings}
 \bibliographystyle{unsrtnat}
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+
+\lstset{
+    backgroundcolor=\color{white},
+    tabsize=4,
+    basicstyle=\ttfamily,
+    breaklines=true
+    framextopmargin=50pt,
+    aboveskip={0.5\baselineskip},
+    columns=fixed,
+    frame=single,
+    showstringspaces=false,
+    extendedchars=false,
+    breaklines=true,
+    numbers=none,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    identifierstyle=\color[rgb]{0.0,0.2,0.0},
+    keywordstyle=\bfseries\color[rgb]{0.2,0.2,0.6},
+    commentstyle=\color[rgb]{0.4,0.6,0.6},
+    stringstyle=\color[rgb]{0.6,0.0,0.2},
+    numberstyle=\tiny\color[rgb]{0.6, 0.6, 0.6}}
+
+\lstdefinelanguage{dj}{
+  keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal},
+  keywordstyle=\color{blue},
+  keywords=[2]{boolean, string, number, objectid},
+  keywordstyle=[2]\color{green}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=true,
+  morecomment=[l][\color{teal}\bfseries]{::},
+  morecomment=[l][\color{gray}\itshape\small]{\#},
+  stringstyle=\color{red},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}
 
 \title{Re0: A Relational Data Language with Operational Entity Integrity.}
 \author{Dimitri Yatsenko, Edgar Y.\ Walker}
@@ -25,7 +68,7 @@ Thanks to the conceptual clarity of Re0, programmers interact with scientific da
 
 \end{abstract}
 
-\section{The relational data model and its variants}
+\section{The relational data model}
 To motivate the need and the advantages of the proposed data model and query language, this section reviews the foundations and principles of the broader relational data model and the shortcomings of its present variants and implementations. 
 
 \subsection{Foundations}
@@ -75,7 +118,7 @@ Different variants of the relational data model use different terminology to ref
 \end{table*}
 
 \subsection{SQL}
-The most common implementations of the relational data model rely on the Structured Query Language or \emph{SQL} for schema definition and data queries.
+The most common implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition and data queries.
 SQL so thoroughly dominates in the space of relational databases, that it has become nearly synonymous with the relational data model despite its deviations from it. 
 For example, its primary data structure is a \emph{table} (see Table \ref{tab:terms}), \emph{i.e.} an ordered list of rows that may contain duplicates and are not proper relations.  
 Effectively, SQL implements a distinct variant of the relational data model that allows its use in non-relational ways. 
@@ -90,18 +133,100 @@ Foreign keys between relationship sets and entity sets express and enforce the c
 In the ERM, query expressions must also follow the rules established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
 The development of ERM stopped short of defining a formal query language distinct from those of the broader relational model.
 
-Although defined as a data model in its own right, the ERM is widely known for its diagramming notation. 
+Although defined as a data model in its own right, the ERM is primarily known for its diagramming notation. 
 Introductory texts and courses on relational databases define the ERM primarily as a diagramming tool for \emph{conceptual modeling} in preparation for the \emph{logical design} and implementation of a database \citep{elmasri-2015-fundamentals, coronel-2016-database}.
-Although SQL does not explicitly express ERM constructs, practicing programmers internalize the ERM modeling approach and mentally classify tables as ``entity tables'' or ``relationship tables''.
+Although SQL does not explicitly express ERM constructs, practicing programmers internalize the ERM modeling approach and mentally classify tables as either ``entity tables'' or ``relationship tables''.
 
 \subsection{Entity integrity}
 According to the ERM, entities are defined as distinctly identifiable within their entity sets. 
 In schema design, the \emph{entity integrity} constraint requires that relations must have an explicit primary key and that values of the primary key attributes may not be null thus ensuring that all tuples are expressly identifiable.
 
 \subsection{Re0}
+The major aim of Re0 is to provide a simpler, conceptually constrained relational data model that is expressive as well as practical. It aims to eliminate the gaps between conceptual modeling, logical modeling, and implementation that are currentlly tolerated. 
+Re0 consists of a schema definition language and a data query language. 
+In Re0, all relations are interpreted as entity sets including those in the schema definition and those resulting from query expressions. 
+R0 comes with a diagramming method to depict the database schema with its entity sets and their dependencies enforcing relationships between the entity sets.
 
 \section{Schema Definition --- Part 1}
+In this section, we will describe the \emph{schema definition language} of Re0.
+
 \subsection{Entity-set declaration}
+A schema is defined by declaring a collection of \emph{base entity sets}.
+An entity set is a set of distinct and identifiable entities from the model world. 
+A base entity has a unique name within the schema 
+
+\begin{lstfloat*}
+\begin{lstlisting}[language=dj]
+::Student     
+student_id : int unsigned   # university-wide ID number 
+---
+first_name      : varchar(40)
+last_name       : varchar(40)
+sex             : enum('F', 'M', 'U')
+date_of_birth   : date
+student_address : varchar(200) # mailing address
+student_phone   : varchar(30) 
+
+::Department 
+dept : varchar(6)   # abbreviated department name, e.g. BIOL
+---
+dept_name    : varchar(200)  # full department name
+dept_address : varchar(200)  # mailing address
+dept_phone   : varchar(30)  
+
+::Major
+-> Student
+---
+-> Department
+declare_date :  date  # major declaration date 
+\end{lstlisting}
+\caption{University database schema definition (Part 1).}
+\end{lstfloat*}
+
+\begin{lstfloat*}
+\begin{lstlisting}[language=dj]
+::Course     
+-> Department
+course  : int unsigned   # course number, e.g. 1010
+---
+full_course_name  :  varchar(200)
+credits           :  decimal(3,1)
+
+::Term
+term_year : year 
+term      : enum('Spring', 'Summer', 'Fall')
+
+::Section 
+-> Course
+-> Term 
+section : char    
+---
+auditorium   :  varchar(12)
+
+::CurrentTerm
+---
+-> Term
+
+::Enroll
+-> Section
+-> Student 
+
+::LetterGrade
+grade : char
+---
+points : decimal(3,2)
+
+::Grade 
+-> Enroll
+---
+-> LetterGrade
+
+\end{lstlisting}
+\caption{University database schema definition (Part 2).}
+\end{lstfloat*}
+
+
+
 \subsubsection{Attributes and their datatypes}
 \subsubsection{Primary key}
 
