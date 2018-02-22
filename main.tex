@@ -60,8 +60,7 @@
 \maketitle
 \begin{abstract}
 A simplified and conceptually clarified variation of the relational data model is proposed along with a complete language for data definition and data queries as well as a diagramming method for visualizing associations among the data.  
-A defining strength of the model is its \emph{operational entity integrity}: the extension of the concept of \emph{entity integrity} from stored data to data queries. 
-All data -- both stored and derived -- are represented as entity sets of well-defined entity classes.  
+A defining strength of the model is its \emph{operational entity integrity} principle requiring that all data -- both stored and derived -- represented in the form of sets of entities belonging to well-defined entity classes.  
 The proposed query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to its operational entity integrity. 
 A practical implementations of Re0 known as DataJoint has been tested and adopted for scientific databases.  
 Thanks to the conceptual clarity of Re0, programmers interact with scientific data more fluently than with other data definition and query languages.
@@ -110,7 +109,7 @@ Different variants of the relational data model use different terminology to ref
    attribute value & attribute value  & field value & attribute value \\
    primary key & primary key & primary key & primary key \\
    foreign key & foreign key & foreign key & foreign key \\
-   relational expression \par {\em or} derived relation &  data query & {\tt SELECT} statement & derived entity set \\
+   relational expression \par {\em or} derived relation &  data query & {\tt SELECT} statement & query expression \\
    \hline
    \end{tabu}
 \caption{Corresponding terms used in variants of relational models.}
@@ -147,7 +146,7 @@ Re0 consists of a schema definition language and a data query language.
 In Re0, all relations are interpreted as entity sets including those in the schema definition and those resulting from query expressions. 
 R0 comes with a diagramming method to depict the database schema with its entity sets and their dependencies enforcing relationships between the entity sets.
 
-\section{Schema Definition --- Part 1}
+\section{Schema Definition --- Basic.}
 In this section, we will describe the \emph{schema definition language} of Re0.
 
 \subsection{Entity-set declaration}
@@ -165,14 +164,14 @@ last_name       : varchar(40)
 sex             : enum('F', 'M', 'U')
 date_of_birth   : date
 student_address : varchar(200) # mailing address
-student_phone   : varchar(30) 
+student_phone   : varchar(14) 
 
 ::Department 
 dept : varchar(6)   # abbreviated department name, e.g. BIOL
 ---
 dept_name    : varchar(200)  # full department name
 dept_address : varchar(200)  # mailing address
-dept_phone   : varchar(30)  
+dept_phone   : varchar(14)  
 
 ::Major
 -> Student
@@ -252,9 +251,14 @@ points : decimal(3,2)
 \subsection{Aggregation}
 \subsection{Relation U}
 
-\section{Schema Definition --- Part 2}
+\section{Schema Definition --- Advanced.}
 \subsection{Dependencies on query expressions}
 \subsection{Master-part relationship}
+The primary motivation for the master-part relationship is to inform the application that the master and all its parts should always appear together or not at all.  
+This usually means using transactions.  
+A transaction starts then the master is inserted, then all the parts, and only then the transaction is committed.  
+This way all other users only see the master entry when all its parts have been entered.
+A part may be in 1-to-1 relationship with its master without any new primary attributes.
 \subsection{Dependency properties}
 
 
