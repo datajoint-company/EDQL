@@ -1,8 +1,9 @@
-\documentclass[letter,twocolumn,11pt]{article}
+\documentclass[letter,10pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{natbib}
+\usepackage{hyperref}
 \usepackage{courier}
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.75in]{geometry}
 \usepackage[table,svgnames]{xcolor}
 \usepackage{multirow}
 \usepackage{tabu}
@@ -59,13 +60,15 @@
 
 \maketitle
 \begin{abstract}
-A simplified and conceptually clarified variation of the relational data model is proposed along with a complete language for data definition and data queries as well as a diagramming method for visualizing associations among the data.  
-A defining strength of the model is its \emph{operational entity integrity} principle requiring that all data -- both stored and derived -- represented in the form of sets of entities belonging to well-defined entity classes.  
-The proposed query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to its operational entity integrity. 
-A practical implementations of Re0 known as DataJoint has been tested and adopted for scientific databases.  
-Thanks to the conceptual clarity of Re0, programmers interact with scientific data more fluently than with other data definition and query languages.
-
+A simplified and conceptually refined relational data model is proposed, including a schema definition language, a data query language, and a diagramming method for visualizing relationships among the data.  
+Named Re0, the model adheres to the principle of \emph{operational entity integrity}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
+Re0's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to adherence to operational entity integrity. 
+Practical implementations of Re0 known as DataJoint haves been tested and adopted for scientific data pipelines.  
+With Re0, programmers interact with scientific data more fluently than with other data definition and query languages.
 \end{abstract}
+\tableofcontents 
+
+\twocolumn
 
 \section{The relational data model}
 To motivate the need and the advantages of the proposed data model and query language, this section reviews the foundations and principles of the broader relational data model and the shortcomings of its present variants and implementations. 
@@ -76,11 +79,11 @@ Briefly, the relational data model is defined by the following principles:
 \begin{enumerate}
 \item Data are represented and manipulated in the form of \emph{relations}. 
 A relation is a set of \emph{tuples} of values for the respective \emph{attributes} of the relation.
-Relations may directly represent stored data (\emph{base relations}) or may be derived from stored data (\emph{derived relations}).
-\item Attribute values are drawn from corresponding attribute \emph{domains}, \emph{i.e.}\ predefined sets of values, which may not include other relations.
-The relational model is essentially flat with no nesting data structures.
-\item Tuples within relations are identified and referenced by values of their attributes.
-To identify and relate data elements, \emph{uniqueness constraints} on a subset of attributes known as a \emph{key} may be imposed so that no two tuples can have the same values of attributes in the key. A single key may be designated as the \emph{primary key} for the relation to serve for referencing elements in a relation.
+Relations may directly represent stored data \emph{(base relations)} or may be derived from stored data \emph{(derived relations)}.
+\item Attribute values are drawn from corresponding attribute \emph{domains}, \emph{i.e.}\ predefined sets of values.
+Attribute domains may not include other relations, ensuring that the relational model is essentially flat with no nesting data structures.
+\item Tuples within relations are addressed by values of their attributes.
+To identify and relate data elements, \emph{uniqueness constraints} on a subset of attributes may be imposed so that no two tuples can have the same values of these attributes.  The set of attributes with a uniqueness constraints are referred to as a \emph{key}. One in a relation key may be designated as the \emph{primary key} for the relation to serve for referencing elements in a relation.
 \item Associations among data are established by means of \emph{referential constraints} in the form of \emph{foreign keys}. 
 Referential constraints prohibit tuples in one relation that lack tuples with matching values in the referenced relation. 
 \item \emph{Query expressions} produce derived relations from base relations.  Query expressions declare specifications for retrieving data.
@@ -117,36 +120,37 @@ Different variants of the relational data model use different terminology to ref
 \end{table*}
 
 \subsection{SQL}
-The most common implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition and data queries.
-SQL so thoroughly dominates in the space of relational databases, that it has become nearly synonymous with the relational data model despite its deviations from it. 
-For example, its primary data structure is a \emph{table} (see Table \ref{tab:terms}), \emph{i.e.} an ordered list of rows that may contain duplicates and are not proper relations.  
+Common implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition and data queries.
+SQL so thoroughly dominates in the space of relational databases that it has become nearly synonymous with the relational data model despite its deviations from it. 
 Effectively, SQL implements a distinct variant of the relational data model that allows its use in non-relational ways. 
 Since SQL is the effective lingua franca in the world of relational databases, some examples and discussions will explicitly highlight the principal conceptual weaknesses of SQL that are resolved with Re0.
 
-\subsection{The Entity-Relationship Model}
-The Entity-Relationship Model (ERM) was proposed to bring conceptual clarity to the relational data model \citep{chen_entity_1976}.  
-The ERM is a variant of the relational model in which each base relation represent either a set of entities or a set of relationships between sets of entities in the modeled world. 
-Each entity set accommodates entities of the same class sharing the same set of attributes and distinguished by the values of the primary key.
+\subsection{ERM}
+\cite{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
+The ERM is a variant of the relational model in which each base relation represents either a set of entities or a set of relationships between sets of entities from the modeled world. 
+Each entity set may contain entities of the same class, sharing the same set of attributes and distinguished by the same  primary key.
 Foreign keys between relationship sets and entity sets express and enforce the corresponding relationship.
 
-In the ERM, query expressions must also follow the rules established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
+In ERM, query expressions must also follow the rules established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
 The development of ERM stopped short of defining a formal query language distinct from those of the broader relational model.
 
-Although defined as a data model in its own right, the ERM is primarily known for its diagramming notation. 
-Introductory texts and courses on relational databases define the ERM primarily as a diagramming tool for \emph{conceptual modeling} in preparation for the \emph{logical design} and implementation of a database \citep{elmasri-2015-fundamentals, coronel-2016-database}.
-Although SQL does not explicitly express ERM constructs, practicing programmers internalize the ERM modeling approach and mentally classify tables as either ``entity tables'' or ``relationship tables''.
+Despite its origin as a relational data model in its own right, ERM is now taught as an abstract model for \emph{conceptual modeling} with expressive diagramming notation.  
+Modern introductory texts and courses on relational databases distinguish \emph{conceptual modeling} from \emph{logical design} as separate phases of database design and implementation \citep{elmasri-2015-fundamentals, coronel-2016-database}.
+SQL does not explicitly embody ERM, practicing programmers internalize its concepts and  mentally or explicitly categorize tables as either ``entity tables'' or ``relationship tables''.  
+ERM designs tend to produce database schemas that already  meet rules of database normalization from formal relational database theory and practicing database developers rarely need to recall the definitions of normal forms from their formal academic training.
 
 \subsection{Entity integrity}
-According to the ERM, entities are defined as distinctly identifiable within their entity sets. 
-In schema design, the \emph{entity integrity} constraint requires that relations must have an explicit primary key and that values of the primary key attributes may not be null thus ensuring that all tuples are expressly identifiable.
+In the ERM, an entity is defined as distinct and identifiable within its entity set. 
+
+The \emph{entity integrity} constraint is the requirement that relations must have an explicit primary key and that values of the primary key attributes cannot be null. 
 
 \subsection{Re0}
-The major aim of Re0 is to provide a simpler, conceptually constrained relational data model that is expressive as well as practical. It aims to eliminate the gaps between conceptual modeling, logical modeling, and implementation that are currentlly tolerated. 
-Re0 consists of a schema definition language and a data query language. 
-In Re0, all relations are interpreted as entity sets including those in the schema definition and those resulting from query expressions. 
-R0 comes with a diagramming method to depict the database schema with its entity sets and their dependencies enforcing relationships between the entity sets.
+Re0 provides a simpler, conceptually refined relational data model that is as expressive as it is practical. 
+It eliminates the gap between conceptual modeling and logical design in database development.
 
-\section{Schema Definition --- Basic.}
+Re0 consists of a schema definition language, a data query language, and diagramming notation for visualizing relationships between data elements. 
+
+\section{Schema Definition --- Basics.}\label{sec:basic}
 In this section, we will describe the \emph{schema definition language} of Re0.
 
 \subsection{Entity-set declaration}
@@ -177,7 +181,7 @@ dept_phone   : varchar(14)
 -> Student
 ---
 -> Department
-declare_date :  date  # major declaration date 
+declare_date :  date  # when student declared her major  
 \end{lstlisting}
 \caption{University database schema definition (Part 1).}
 \end{lstfloat*}
@@ -198,7 +202,7 @@ term      : enum('Spring', 'Summer', 'Fall')
 ::Section 
 -> Course
 -> Term 
-section : char    
+section : char(1)
 ---
 auditorium   :  varchar(12)
 
@@ -236,7 +240,7 @@ points : decimal(3,2)
 
 \subsection{Schema diagrams}
 
-\section{Query expressions}
+\section{Query Expressions}
 \subsection{Relational operators and expressions}
 \subsection{Operational entity integrity}
 \subsection{Join compatibility}
@@ -260,6 +264,14 @@ A transaction starts then the master is inserted, then all the parts, and only t
 This way all other users only see the master entry when all its parts have been entered.
 A part may be in 1-to-1 relationship with its master without any new primary attributes.
 \subsection{Dependency properties}
+
+\appendix
+
+\section{Differences from SQL}
+Faithful adherence to the relational data model. 
+Native entity integrity.
+
+\subsection{SQL Translations}
 
 
 \bibliography{DataJoint}
