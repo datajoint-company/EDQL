@@ -4,4 +4,6 @@
 *log
 *blg
 *bbl
+notebooks/dj_local_conf.json
+notebooks/.*
 main.pdf

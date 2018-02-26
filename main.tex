@@ -1,5 +1,6 @@
 \documentclass[letter,10pt]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{hyperref}
 \usepackage{courier}
@@ -13,6 +14,8 @@
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+
+\graphicspath{{./figures/}}
 
 \lstset{
     backgroundcolor=\color{white},
@@ -94,7 +97,7 @@ A collection of base relations with their attributes, domains, uniqueness constr
 
 The relational model itself is abstract and semantically unconstrained, allowing many distinct approaches for translating real-world entities and relationships into a relational database schema. 
 A set of formal rules known as \emph{normal forms} have been defined to test whether a given schema meets basics quality requirements that minimize redundancies and anomalies in data manipulations \citep{kent-1983-simple}.
-The relational model does not impose semantic constraints on its query expressions, giving absolute freedom to equate arbitrary attributes across relations within a query expression regardless of the meaning of such attributes.
+The relational model does not impose semantic constraints on its query expressions, giving freedom to equate arbitrary regardless of their semantics.
 
 Different variants of the relational data model use different terminology to refer to similar concepts (Table \ref{tab:terms}).
 \tabulinesep=6pt
@@ -126,12 +129,12 @@ Effectively, SQL implements a distinct variant of the relational data model that
 Since SQL is the effective lingua franca in the world of relational databases, some examples and discussions will explicitly highlight the principal conceptual weaknesses of SQL that are resolved with Re0.
 
 \subsection{ERM}
-\cite{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
+Peter Chen \citep{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
 The ERM is a variant of the relational model in which each base relation represents either a set of entities or a set of relationships between sets of entities from the modeled world. 
 Each entity set may contain entities of the same class, sharing the same set of attributes and distinguished by the same  primary key.
 Foreign keys between relationship sets and entity sets express and enforce the corresponding relationship.
 
-In ERM, query expressions must also follow the rules established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
+In ERM, query expressions follow patterns established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
 The development of ERM stopped short of defining a formal query language distinct from those of the broader relational model.
 
 Despite its origin as a relational data model in its own right, ERM is now taught as an abstract model for \emph{conceptual modeling} with expressive diagramming notation.  
@@ -149,6 +152,13 @@ Re0 provides a simpler, conceptually refined relational data model that is as ex
 It eliminates the gap between conceptual modeling and logical design in database development.
 
 Re0 consists of a schema definition language, a data query language, and diagramming notation for visualizing relationships between data elements. 
+
+The central concept of the Re0 data model is that of an \emph{entity set}. 
+An entity set is an unordered collection of distinct \emph{entities} of the same \emph{entity class}.
+An individual entity is an object, an item, or a more abstract entity (\emph{e.g.}\ a relationship) that is distinctly identified in the model universe. 
+All entities in the same entity class have the same attributes and the same primary key.
+
+This definition entity set is essentially identical to that of the Entity-Relationship Model.
 
 \section{Schema Definition --- Basics.}\label{sec:basic}
 In this section, we will describe the \emph{schema definition language} of Re0.
@@ -177,7 +187,7 @@ dept_name    : varchar(200)  # full department name
 dept_address : varchar(200)  # mailing address
 dept_phone   : varchar(14)  
 
-::Major
+::StudentMajor
 -> Student
 ---
 -> Department
@@ -192,8 +202,8 @@ declare_date :  date  # when student declared her major
 -> Department
 course  : int unsigned   # course number, e.g. 1010
 ---
-full_course_name  :  varchar(200)
-credits           :  decimal(3,1)
+course_name :  varchar(200)  # e.g. "Neurobiology of Sensation and Movement."
+credits     :  decimal(3,1)  # number of credits earned by completing the course
 
 ::Term
 term_year : year 
@@ -228,6 +238,11 @@ points : decimal(3,2)
 \caption{University database schema definition (Part 2).}
 \end{lstfloat*}
 
+\begin{figure}
+\includegraphics[width=\columnwidth]{uni_erd.pdf}
+\caption{The schema diagram of the university database.}
+\label{fig:erd}
+\end{figure}
 
 
 \subsubsection{Attributes and their datatypes}
@@ -253,6 +268,7 @@ points : decimal(3,2)
 \subsection{Projection}
 \subsection{Union}
 \subsection{Aggregation}
+Aggregation functions cannot be used in restrictions. 
 \subsection{Relation U}
 
 \section{Schema Definition --- Advanced.}
