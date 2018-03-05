@@ -63,7 +63,7 @@
 
 \maketitle
 \begin{abstract}
-A simplified and conceptually refined relational data model is proposed, including a schema definition language, a data query language, and a diagramming method for visualizing relationships among the data.  
+A simplified and conceptually refined relational data model is proposed with a language for schema definition and data queries as well as a diagramming method for visualizing relationships among the data.  
 Named Re0, the model adheres to the principle of \emph{operational entity integrity}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
 Re0's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to adherence to operational entity integrity. 
 Practical implementations of Re0 known as DataJoint haves been tested and adopted for scientific data pipelines.  
@@ -130,7 +130,7 @@ Since SQL is the effective lingua franca in the world of relational databases, s
 
 \subsection{ERM}
 Peter Chen \citep{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
-The ERM is a variant of the relational model in which each base relation represents either a set of entities or a set of relationships between sets of entities from the modeled world. 
+In the ERM, each base relation denotes either a set of entities or a set of relationships between sets of entities. 
 Each entity set may contain entities of the same class, sharing the same set of attributes and distinguished by the same  primary key.
 Foreign keys between relationship sets and entity sets express and enforce the corresponding relationship.
 
@@ -147,7 +147,7 @@ In the ERM, an entity is defined as distinct and identifiable within its entity 
 
 The \emph{entity integrity} constraint is the requirement that relations must have an explicit primary key and that values of the primary key attributes cannot be null. 
 
-\section{Re0 Fundamentals}
+\section{Re0 Foundations}
 Re0 provides a simpler, conceptually refined relational data model that is as expressive as it is practical. 
 It eliminates the gap between conceptual modeling and logical design in database development.
 
