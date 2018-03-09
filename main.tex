@@ -10,10 +10,23 @@
 \usepackage{tabu}
 \usepackage{float}
 \usepackage{listings}
+\usepackage{xspace} 
 \bibliographystyle{unsrtnat}
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{authblk}
+
+\author[1,2]{Dimitri Yatsenko\thanks{dvyatsen@bcm.edu}}
+\affil[1]{Department of Neuroscience, Baylor College of Medicine, Houston, Texas, USA}
+\affil[2]{Vathes LLC, Houston, Texas, USA}
+
+\renewcommand\Authands{ and }
+\newcommand{\datajoint}{DataJoint\xspace}
+
 
 \graphicspath{{./figures/}}
 
@@ -56,18 +69,17 @@
 \newfloat{lstfloat}{htbp}{lop}
 \floatname{lstfloat}{Listing}
 
-\title{Re0: A Relational Data Language with Operational Entity Integrity.}
-\author{Dimitri Yatsenko, Edgar Y.\ Walker}
+\title{\datajoint: A Simpler Relational Data Model and Language}
 
 \begin{document}
 
 \maketitle
 \begin{abstract}
 A simplified and conceptually refined relational data model is proposed with a language for schema definition and data queries as well as a diagramming method for visualizing relationships among the data.  
-Named Re0, the model adheres to the principle of \emph{operational entity integrity}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
-Re0's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to adherence to operational entity integrity. 
-Practical implementations of Re0 known as DataJoint haves been tested and adopted for scientific data pipelines.  
-With Re0, programmers interact with scientific data more fluently than with other data definition and query languages.
+Named \datajoint, the model adheres to the principle of \emph{operational entity integrity}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
+\datajoint's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to adherence to operational entity integrity. 
+Practical implementations of \datajoint known as DataJoint haves been tested and adopted for scientific data pipelines.  
+With \datajoint, programmers interact with scientific data more fluently than with other data definition and query languages.
 \end{abstract}
 \tableofcontents 
 
@@ -106,7 +118,7 @@ Different variants of the relational data model use different terminology to ref
    \begin{tabu}{|X[1,c,p]| X[1,c]| X[1,c]| X[1,c]|}
    \hline
    \rowcolor{HeaderColor}
-   {\bf Relational} & {\bf ERM} & {\bf SQL} & {\bf Re0}  \\
+   {\bf Relational} & {\bf ERM} & {\bf SQL} & {\bf \datajoint}  \\
    \cellcolor{white} & entity set & \cellcolor{white} & \cellcolor{white} \\
    \multirow{-2}{*}{relation}  & relationship set  & \multirow{-2}{*}{table}  &  \multirow{-2}{*}{entity set} \\
    tuple       & entity           & row       & entity \\
@@ -126,7 +138,7 @@ Different variants of the relational data model use different terminology to ref
 Common implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition and data queries.
 SQL so thoroughly dominates in the space of relational databases that it has become nearly synonymous with the relational data model despite its deviations from it. 
 Effectively, SQL implements a distinct variant of the relational data model that allows its use in non-relational ways. 
-Since SQL is the effective lingua franca in the world of relational databases, some examples and discussions will explicitly highlight the principal conceptual weaknesses of SQL that are resolved with Re0.
+Since SQL is the effective lingua franca in the world of relational databases, some examples and discussions will explicitly highlight the principal conceptual weaknesses of SQL that are resolved with \datajoint.
 
 \subsection{ERM}
 Peter Chen \citep{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
@@ -147,13 +159,13 @@ In the ERM, an entity is defined as distinct and identifiable within its entity 
 
 The \emph{entity integrity} constraint is the requirement that relations must have an explicit primary key and that values of the primary key attributes cannot be null. 
 
-\section{Re0 Foundations}
-Re0 provides a simpler, conceptually refined relational data model that is as expressive as it is practical. 
+\section{\datajoint Foundations}
+\datajoint provides a simpler, conceptually refined relational data model that is as expressive as it is practical. 
 It eliminates the gap between conceptual modeling and logical design in database development.
 
-Re0 consists of a schema definition language, a data query language, and diagramming notation for visualizing relationships between data elements. 
+\datajoint consists of a schema definition language, a data query language, and diagramming notation for visualizing relationships between data elements. 
 
-The central concept of the Re0 data model is that of an \emph{entity set}. 
+The central concept of the \datajoint data model is that of an \emph{entity set}. 
 An entity set is an unordered collection of distinct \emph{entities} of the same \emph{entity class}.
 An individual entity is an object, an item, or a more abstract entity (\emph{e.g.}\ a relationship) that is distinctly identified in the model universe. 
 All entities in the same entity class have the same attributes and the same primary key.
@@ -161,7 +173,7 @@ All entities in the same entity class have the same attributes and the same prim
 This definition entity set is essentially identical to that of the Entity-Relationship Model.
 
 \section{Schema Definition --- Basics.}\label{sec:basic}
-In this section, we will describe the \emph{schema definition language} of Re0.
+In this section, we will describe the \emph{schema definition language} of \datajoint.
 
 \subsection{Entity-set declaration}
 A schema is defined by declaring a collection of \emph{base entity sets}.
@@ -225,7 +237,7 @@ auditorium   :  varchar(12)
 -> Student 
 
 ::LetterGrade
-grade : char
+grade : char(2)
 ---
 points : decimal(3,2)
 
