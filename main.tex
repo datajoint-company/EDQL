@@ -85,65 +85,71 @@ With \datajoint, programmers interact with scientific data more fluently than wi
 
 \twocolumn
 
-\section{The relational data model}
-To motivate the need and the advantages of the proposed data model and query language, this section reviews the foundations and principles of the broader relational data model and the shortcomings of its present variants and implementations. 
+\section{Core Concepts}
+\subsection{The Relational Data Model}
+The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structuring stored data as well as the most precise approach to querying stored data.  
+Briefly, the relational data model is characterized by the principles of data representation, domain constraints, uniqueness constraints, referential constraints, and declarative queries as summarised in Table \ref{tab:core}.
 
-\subsection{Foundations}
-The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structuring stored data and the most precise approach to querying stored data.  
-Briefly, the relational data model is defined by the following principles:
-\begin{enumerate}
-\item Data are represented and manipulated in the form of \emph{relations}. 
-A relation is a set of \emph{tuples} of values for the respective \emph{attributes} of the relation.
-Relations may directly represent stored data \emph{(base relations)} or may be derived from stored data \emph{(derived relations)}.
-\item Attribute values are drawn from corresponding attribute \emph{domains}, \emph{i.e.}\ predefined sets of values.
-Attribute domains may not include other relations, ensuring that the relational model is essentially flat with no nesting data structures.
-\item Tuples within relations are addressed by values of their attributes.
-To identify and relate data elements, \emph{uniqueness constraints} on a subset of attributes may be imposed so that no two tuples can have the same values of these attributes.  The set of attributes with a uniqueness constraints are referred to as a \emph{key}. One in a relation key may be designated as the \emph{primary key} for the relation to serve for referencing elements in a relation.
-\item Associations among data are established by means of \emph{referential constraints} in the form of \emph{foreign keys}. 
-Referential constraints prohibit tuples in one relation that lack tuples with matching values in the referenced relation. 
-\item \emph{Query expressions} produce derived relations from base relations.  Query expressions declare specifications for retrieving data.
-Formal languages for query expressions include \emph{relational algebra} and \emph{relational calculus}.  
-\end{enumerate}
-
-A collection of base relations with their attributes, domains, uniqueness constraints, and referential constraints is commonly referred to as a database \emph{schema}.
-
-The relational model itself is abstract and semantically unconstrained, allowing many distinct approaches for translating real-world entities and relationships into a relational database schema. 
-A set of formal rules known as \emph{normal forms} have been defined to test whether a given schema meets basics quality requirements that minimize redundancies and anomalies in data manipulations \citep{kent-1983-simple}.
-The relational model does not impose semantic constraints on its query expressions, giving freedom to equate arbitrary regardless of their semantics.
-
-Different variants of the relational data model use different terminology to refer to similar concepts (Table \ref{tab:terms}).
 \tabulinesep=6pt
 \begin{table*}[ht]
-   \rowcolors{1}{white}{gray!20}
-   \begin{tabu}{|X[1,c,p]| X[1,c]| X[1,c]| X[1,c]|}
-   \hline
-   \rowcolor{HeaderColor}
-   {\bf Relational} & {\bf ERM} & {\bf SQL} & {\bf \datajoint}  \\
-   \cellcolor{white} & entity set & \cellcolor{white} & \cellcolor{white} \\
-   \multirow{-2}{*}{relation}  & relationship set  & \multirow{-2}{*}{table}  &  \multirow{-2}{*}{entity set} \\
-   tuple       & entity           & row       & entity \\
-   domain      & value set        & data type & data type \\
-   attribute   & attribute        & column {\em or} field    & attribute \\
-   attribute value & attribute value  & field value & attribute value \\
-   primary key & primary key & primary key & primary key \\
-   foreign key & foreign key & foreign key & foreign key \\
-   relational expression \par {\em or} derived relation &  data query & {\tt SELECT} statement & query expression \\
-   \hline
-   \end{tabu}
-\caption{Corresponding terms used in variants of relational models.}
-\label{tab:terms}
+\begin{tabu}{|X|}
+\hline
+{\bf Data representation.} Data are represented and manipulated in the form of \emph{relations}. 
+A relation is a set (unordered collections) of \emph{tuples} of values for each of the respective named \emph{attributes} of the relation.
+\emph{Base relations} represent stored data while \emph{derived relations} are formed from base relations as a result of data queries.
+A collection of base relations with their attributes, domain constraints, uniqueness constraints, and referential constraints is called a \emph{schema}.
+
+\\
+{\bf Domain constraint.} Attribute values are drawn from corresponding attribute \emph{domains}, \emph{i.e.}\ predefined sets of values.
+Attribute domains may not include other relations, ensuring that the relational model is essentially flat with no nesting data structures.
+
+\\
+{\bf Uniqueness constraints.} Tuples within relations are addressed by values of their attributes.
+To identify and relate data elements, \emph{uniqueness constraints} on a subset of attributes may be imposed so that no two tuples can have the same values of these attributes.  The set of attributes with a uniqueness constraints are referred to as a \emph{key}. One in a relation key may be designated as the \emph{primary key} for the relation to serve for referencing elements in a relation.
+
+\\
+{\bf Referential constraints.} Associations among data are established by means of \emph{referential constraints} in the form of \emph{foreign keys}. 
+Referential constraints prohibit tuples in one relation that lack tuples with matching values in the referenced relation. 
+
+\\
+{\bf Declarative queries.} \emph{Query expressions} produce derived relations from base relations.  
+Query expressions declare specifications for retrieving data rather than a procedural one. 
+Formal languages for query expressions include \emph{relational algebra} and \emph{relational calculus}.  
+\\
+\hline
+\end{tabu}
+\caption{Core principles of the relational data model.}
+\label{tab:core}
 \end{table*}
 
-\subsection{SQL}
-Common implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition and data queries.
-SQL so thoroughly dominates in the space of relational databases that it has become nearly synonymous with the relational data model despite its deviations from it. 
-Effectively, SQL implements a distinct variant of the relational data model that allows its use in non-relational ways. 
-Since SQL is the effective lingua franca in the world of relational databases, some examples and discussions will explicitly highlight the principal conceptual weaknesses of SQL that are resolved with \datajoint.
+Popular implementations of the relational data model rely on the Structured Query Language (SQL) for schema definition, data manipulation, and data queries.
+SQL so thoroughly dominates in the space of relational databases that it has become nearly synonymous with the relational data model despite notable deviations from its core principles.
 
-\subsection{ERM}
-Peter Chen \citep{chen_entity_1976} proposed the Entity-Relationship Model (ERM) to conceptually clarify the relational data model.
-In the ERM, each base relation denotes either a set of entities or a set of relationships between sets of entities. 
-Each entity set may contain entities of the same class, sharing the same set of attributes and distinguished by the same  primary key.
+\datajoint is a clean, conceptually refined implementation of the relational data model adhering faithfully to its core principles.
+Its introduction is motivated by the need for expressive and flexible conceptual and logical constructs for database programming in scientific computing.
+
+\datajoint comprises 
+\begin{itemize}
+\item a \emph{schema definition language} (Sections \ref{sec:def1} and \ref{sec:def2}),
+\item a \emph{data manipulation language} (Section \ref{sec:manip}),
+\item a \emph{data query language} (Section \ref{sec:query}), and 
+\item diagramming notation for visualizing relationships between modeled entities (Section \ref{sec:diag}). 
+\end{itemize}
+
+\subsection{Conceptual Clarification}
+The relational model in itself is abstract and semantically unconstrained, providing few guidelines for translating real-world entities and relationships into database schemas or for forming valid queries. 
+For schema design, a set of formal rules known as \emph{normal forms} has been defined to test whether a particular schema meets basics quality requirements that minimize redundancies in data storage and anomalies in data manipulations \citep{kent-1983-simple}.
+For data queries, the relational data model provides few constraints as to what constitutes a valid or meaningful query, allowing unlimited freedom to compare and match different relations and attributes regardless of their semantic compatibility.
+This lack of conceptual clarity has led to a diversity of incompatible approaches to schema design and data queries, slow learning, and limits on complexity of schemas designs and data queries.
+
+To address these problems and to bring conceptual clarity to database schema design and data queries, Peter Chen proposed a new variant of the relational data model known as the Entity-Relationship Model (ERM) \citep{chen_entity_1976}.
+In the ERM, each base relation denotes either an \emph{entity set} or a \emph{relationship set} and these terms effectively subsume the term \emph{relation}.
+
+Table \ref{tab:terms} correlates the terms used by each variant of the relational data model. 
+
+All elements of a given entity set must belong to the same \emph{entity type} with the same set of attributes and distinguished from each other by the same primary key attributes.
+
+Each entity set may only contain entities of the same class, sharing the same set of attributes and distinguished by the same  primary key.
 Foreign keys between relationship sets and entity sets express and enforce the corresponding relationship.
 
 In ERM, query expressions follow patterns established through relationship sets between entity sets, providing a correspondence between the schema design and sensible queries. 
@@ -157,23 +163,63 @@ ERM designs tend to produce database schemas that already  meet rules of databas
 \subsection{Entity integrity}
 In the ERM, an entity is defined as distinct and identifiable within its entity set. 
 
-The \emph{entity integrity} constraint is the requirement that relations must have an explicit primary key and that values of the primary key attributes cannot be null. 
+In database theory, the \emph{entity integrity} constraint is the requirement that relations must have an explicit primary key and that values of the primary key attributes cannot be missing (null). 
 
-\section{\datajoint Foundations}
+In this paper, we use the term \emph{entity integrity} more broadly as the property of a relational database to respect its relations as entity sets.
+
+Different variants of the relational data model use different terminology to refer to similar concepts (Table \ref{tab:terms}).
+\tabulinesep=6pt
+\begin{table*}[ht]
+   \rowcolors{1}{white}{gray!20}
+   \begin{tabu}{|X[1,c,p]| X[1,c]| X[1,c]| X[1,c]|}
+   \hline
+   \rowcolor{HeaderColor}
+   {\bf Relational} & {\bf ERM} & {\bf SQL} & {\bf \datajoint}  \\
+   \cellcolor{white} & entity set & \cellcolor{white} & \cellcolor{white} \\
+   \multirow{-2}{*}{relation}  & relationship set  & \multirow{-2}{*}{table}  &  \multirow{-2}{*}{entity set} \\
+   tuple       & entity           & row    & entity \\
+   domain      & value set        & data type & data type \\
+   attribute   & attribute        & column {\em or} field    & attribute \\
+   attribute value & attribute value  & field value & attribute value \\
+   primary key & primary key & primary key & primary key \\
+   foreign key & foreign key & foreign key & foreign key \\
+   schema      & schema      &  schema  &  schema \\
+   relational expression \par {\em or} derived relation &  data query & {\tt SELECT} statement & query expression \\
+   \hline
+   \end{tabu}
+\caption{Corresponding terms used in variants of relational models.}
+\label{tab:terms}
+\end{table*}
+
 \datajoint provides a simpler, conceptually refined relational data model that is as expressive as it is practical. 
-It eliminates the gap between conceptual modeling and logical design in database development.
+These conceptual refinements eliminate the gap between conceptual modeling and logical design in database development.
 
-\datajoint consists of a schema definition language, a data query language, and diagramming notation for visualizing relationships between data elements. 
+Fundamentally, \datajoint is a relational data model.  This means that its basic and only data structure is a \emph{relation}.
+Additionally, every relation represents an \emph{entity set}: an unordered collection of identifiable items in the modeled world that have the same set of attributes, are distinguished from each other by the same \emph{primary key}, and participating in the same kinds of dependency relationships  with other entity sets. 
+Secondary attribute values may be omitted in some elements of an entity set (\emph{i.e.}\ set to null. 
+However,  primary key attributes of any element of an entity set cannot be null. 
 
-The central concept of the \datajoint data model is that of an \emph{entity set}. 
-An entity set is an unordered collection of distinct \emph{entities} of the same \emph{entity class}.
-An individual entity is an object, an item, or a more abstract entity (\emph{e.g.}\ a relationship) that is distinctly identified in the model universe. 
-All entities in the same entity class have the same attributes and the same primary key.
+\datajoint's definition of an entity set is essentially equivalent to that used in the ERM.
+Relations and entity sets are often visualized in the form of \emph{tables}. 
+Therefore, in \datajoint the terms \emph{relation}, \emph{entity set}, and \emph{table} can be used interchangeably even though this equivalence does not generally hold in other data models. 
+Individual elements of an entity set may be called \emph{entity instances}, \emph{tuples}, or \emph{rows}.
+The attributes of an entity set may also be called \emph{columns} or \emph{fields}. (See Table \ref{tab:terms}).
 
-This definition entity set is essentially identical to that of the Entity-Relationship Model.
 
-\section{Schema Definition --- Basics.}\label{sec:basic}
-In this section, we will describe the \emph{schema definition language} of \datajoint.
+\begin{description}
+\item[The schema definition language] allows defining the structure of the stored entity sets (base entity sets)  and their interdependencies.  
+\item[The data manipulation language] allows updating the stored data.
+\item[The data query language] allows deriving entity sets (\emph{derived entity sets}) from base entity sets using \emph{relational expressions}.
+\end{description}
+
+All three sublanguages respect the definition of relations as entity sets.  
+In particular,  data resulting from queries appear as well-formed entity sets with a clearly expressed entity type, primary key. 
+We refer to this innovation as \emph{operational entity integrity}. 
+
+Operational entity integrity is related to the concept \emph{entity integrity constraint} in conventional database systems but applies to derived data as well as stored data.
+
+\section{Schema Definition --- Basics.}\label{sec:def1}
+\datajoint's  \emph{schema definition language} allows defining base entity sets and dependencies between them. 
 
 \subsection{Entity-set declaration}
 A schema is defined by declaring a collection of \emph{base entity sets}.
@@ -206,6 +252,7 @@ dept_phone   : varchar(14)
 declare_date :  date  # when student declared her major  
 \end{lstlisting}
 \caption{University database schema definition (Part 1).}
+\label{lst:uni1}
 \end{lstfloat*}
 
 \begin{lstfloat*}
@@ -248,6 +295,7 @@ points : decimal(3,2)
 
 \end{lstlisting}
 \caption{University database schema definition (Part 2).}
+\label{lst:uni2}
 \end{lstfloat*}
 
 \begin{figure}
@@ -265,14 +313,14 @@ points : decimal(3,2)
 \subsubsection{Primary and secondary dependencies}
 \subsubsection{Acyclicity}
 
-\subsection{Schema diagrams}
+\subsection{Schema diagrams}\label{sec:diag}
 
-\section{Data manipulation}
+\section{Data manipulation}\label{sec:manip}
 \subsection{Insert}
 \subsection{Delete}
 \subsection{Cautious update}
 
-\section{Query Expressions}
+\section{Query Expressions}\label{sec:query}
 \subsection{Relational operators and expressions}
 \subsection{Operational entity integrity}
 \subsection{Join compatibility}
@@ -288,7 +336,7 @@ points : decimal(3,2)
 Aggregation functions cannot be used in restrictions. 
 \subsection{Relation U}
 
-\section{Schema Definition --- Advanced.}
+\section{Schema Definition --- Advanced.}\label{sec:def2}
 \subsection{Dependencies on query expressions}
 \subsection{Master-part relationship}
 The primary motivation for the master-part relationship is to inform the application that the master and all its parts should always appear together or not at all.  
@@ -297,6 +345,20 @@ A transaction starts then the master is inserted, then all the parts, and only t
 This way all other users only see the master entry when all its parts have been entered.
 A part may be in 1-to-1 relationship with its master without any new primary attributes.
 \subsection{Dependency properties}
+
+\section{Discussion}
+The relational model for databases has been around for nearly fifty years and its use has been standardized by a wide adoption of SQL.
+However, some lack of conceptual clarity of SQL and the relational data model make them unwieldy for conceptual design and complex queries. 
+As a result, the field has converged on the understanding that database design consists of two distinct components: \emph{conceptual modeling} and \emph{logical modeling} leading to physical implementation. 
+Although the Entity Relationship Model was proposed as a model suitable for both conceptual modeling and definition of database schemas, it never replaced the refined data definition languages and evolved into a tool limited to conceptual modeling.  
+Furthermore, the ERM's conceptual clarifications chiefly pertain to schema definition and do not provide a data query language with the same level conceptual clarification for derived results as for stored data.
+
+The relational data model and its query languages relational algebra and relational calculus are not concerned with observing. 
+
+SQL in term is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
+Although most SQL programmers 
+
+
 
 \appendix
 
