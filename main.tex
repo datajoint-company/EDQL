@@ -77,9 +77,9 @@
 \maketitle
 \begin{abstract}
 A simplified and conceptually refined relational data model is proposed with a language for schema definition and data queries as well as a diagramming method for visualizing relationships among the data.  
-Named \datajoint, the model adheres to the principle of \emph{operational entity integrity}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
-\datajoint's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to adherence to operational entity integrity. 
-Practical implementations of \datajoint known as DataJoint haves been tested and adopted for scientific data pipelines.  
+Named \datajoint, the model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity classes.  
+\datajoint's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to entity normalization. 
+Practical implementations of \datajoint have been tested and adopted for scientific data pipelines by a number of leading neuroscience labs.  
 With \datajoint, programmers interact with scientific data more fluently than with other data definition and query languages.
 \end{abstract}
 \tableofcontents 
@@ -207,17 +207,22 @@ To expressively depict this variety of dependencies, \datajoint introduces its o
 \end{table*}
 
 \subsection{Entity integrity}
-I define \emph{entity integrity} as the ability of a relational data model and schema design to support the interpretation of relations as well-formed entity sets.
-For entity integrity, each relation must fit the definition of a valid entity set: 
+Let's define \emph{entity norgmalization} as the requirement that all data must be represented in relations that meet the criteria of a well-formed entity sets.
+
+These criteria are
 \begin{itemize}
-\item Conceptually, any relation must represent a well-defined and easily identified class of entities from the model world.
-\item All attributes of a relation must apply directly to each of its elements, although some attribute values may be missing (set to null).  
+\item Any relation must represent a well-defined and readily identified class of entities from the model world.
+\item All attributes of a relation must be applicable directly to each of its elements, although some attribute values may be missing (set to null).  
 \item All elements of a relation must be distinguishable form each other by the same primary key.
 \item Primary key attribute values cannot be missing (set to null).
 \item All elements of a relation can participate in the same relationships with other entity sets.
 \end{itemize}
 
-\datajoint requires  entity integrity in base relations and derived relations.  
+Entity normalization is related to two concepts from conventional relational database theory: database normalization  and the entity integrity constraint. 
+ 
+
+
+\datajoint requires  entity integrity in both base relations and derived relations.  
 The adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
 In schema design, it become the guiding principle for normalized design.
 For queries, \datajoint's relational operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
@@ -225,14 +230,13 @@ For queries, \datajoint's relational operators are designed so that each interme
 In established relational database theory, the \emph{entity integrity constraint} refers to the requirement that base relations in a schema  must have an explicitly defined primary key and that values of the primary key attributes cannot be missing (set to null).  
 This is a much narrowed definition of entity integrity.
 
-
 \section{Basic Schema Definition}\label{sec:def1}
-\datajoint's  \emph{schema definition language} allows defining base entity sets and dependencies between them. 
+\subsection{Entity definition syntax}
+\datajoint's  \emph{schema definition language} allows defining entity sets for stored data or \emph{base entity sets} and dependencies between them. 
+Base entity sets are identified by unique names within their schema. 
 
-\subsection{Entity-set declaration}
-A schema is defined by declaring a collection of \emph{base entity sets}.
-An entity set is a set of distinct and identifiable entities from the model world. 
-A base entity has a unique name within the schema 
+A university database is a popular example for demonstrating database design and we will design a simple database to illustrate basic concepts. 
+Listing \ref{lst:uni1} defines three base entity sets {\tt Student}, {\tt Department}, and {\tt StudentMajor}.
 
 \begin{lstfloat*}
 \begin{lstlisting}[language=dj]
@@ -262,6 +266,30 @@ declare_date :  date  # when student declared her major
 \caption{University database schema definition (Part 1).}
 \label{lst:uni1}
 \end{lstfloat*}
+
+Each entity set begins with the line specifying the entity name as 
+\begin{lstlisting}[language=dj, frame=none]
+::EntityName 
+\end{lstlisting}
+
+By convention, the name of the entire entity set describes an individual entity rather than the entire entity set.  
+Thus the entity set {\tt Student} contains all students from our university. 
+
+The remaining lines of an entity definition define entity attributes in the form
+\begin{lstlisting}[language=dj, frame=none]
+attribute_name : datatype   # comment
+\end{lstlisting}
+The comment is optional.
+
+A variety of datatypes may be used.  In our examples, we will use the following datatypes familiar from SQL.
+\begin{description}
+\item[int]  a 32-bit signed integer 
+\item[int unsigned] a 32-bite unsigned integer
+\item[decimal(n,m)] a decimal number with {\tt n} total digits and {\tt m} fractional digits
+\item[char(n), varchar(n)] a string of up to {\tt n} characters
+\item[date] a calendar date
+\item[enum('one','two','three')] a value from an enumerated set of values
+\end{description}
 
 \begin{lstfloat*}
 \begin{lstlisting}[language=dj]
