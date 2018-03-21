@@ -164,30 +164,33 @@ Table \ref{tab:terms} correlates equivalent terms used in different variants of 
 \end{table*}
 
 \subsection{Conceptual Ambiguity}
-The relational model in itself is abstract and semantically unconstrained, providing few guidelines for translating real-world entities and relationships into database schemas or for forming valid queries. 
-Learning to design and query databases for practical problems requires \emph{conceptual clarification}: developing intution and techniques for mapping real-world entities and rules onto the concepts of the relational data model from Table \ref{tab:core}.
+The relational model is abstract and semantically unconstrained, providing few guidelines for translating given problems into database schemas or for forming valid queries. 
+Learning to design and query databases for practical problems requires \emph{conceptual clarification}: developing intuition and techniques for mapping real-world rules onto the concepts of the relational data model from Table \ref{tab:core}.
 
 A set of formal rules known as \emph{normal forms} have been devised to test whether a particular schema meets basic quality requirements that minimize redundancies in data storage and anomalies in data manipulations \citep{kent-1983-simple}.  
-Defined using the mathematical concept of {\em functional dependencies} among the attributes, normal forms remain abstract and provide no conceptual clarification. 
+Relying on the mathematical concept of {\em functional dependencies} among the attributes, normal forms remain abstract and provide no conceptual clarification. 
+When a schema does not meet the normal forms, it is considered \emph{unnormalized}. 
+Redesigning schemas to meet these tests is called \emph{normalization}.
 
 For data queries, the relational data model provides few constraints as to what constitutes a valid or meaningful query, allowing unlimited freedom to compare, match, and combine attributes of relations regardless of their semantic compatibility.
-This lack of semantic constraint in the relational data model allows a diversity of incompatible approaches to schema design and data queries. 
+
+The overall lack of semantic constraints in the relational data model allows a diversity of incompatible approaches to schema design and data queries. 
 
 \subsection{ERM}
-Perhaps the most successful effort to bring conceptual clarity to the relational data model was proposed in 1976 by Peter Chen and is known the Entity-Relationship Model (ERM) \citep{chen_entity_1976}.
-
-Briefly, ERM provides 
+The most successful effort to clarify the relational data model began with the Entity-Relationship Model (ERM) \citep{chen_entity_1976}.  
+The ERM provides 
 \begin{enumerate}
-\item a method for analyzing a problem and to produce a relational schema design 
-\item diagramming notation to visualize the schema design 
-\item an approach to construct meaningful queries
+\item a method for problem analysis for schema design 
+\item diagramming notation for schema design 
+\item constraints for meaningful queries
 \end{enumerate}
 
-The model's central concept is that of an {\em entity set} or simply {\em entity}.  
-An \emph{entity set} is an unordered collection of identifiable items in the modeled world that share the same set of attributes, are distinguished from each other by the same \emph{primary key}, and can participate in the same types of relationships with other entity sets. 
+The central concept in ERM is that of an {\em entity set}: an unordered collection of identifiable items in the modeled world that share the same set of attributes, are distinguished from each other by the same \emph{primary key}, and can participate in the same types of relationships with other entity sets. 
+In ERM, all base relations are either entity sets or \emph{relationship sets} between entity sets.
 
-ERM's diagramming notation depicting entity sets and relationship sets, turning ERM into an effective tool for \emph{conceptual modeling} and communication between database designers and customers or managers.
+ERM diagramming notation depicts entity sets and relationship sets, turning ERM into an effective tool for \emph{conceptual modeling} and communication between database designers and customers or managers.
 
+By prescribing how to map 
 ERM constrains how schemas can be constructed and how queries can be issued.  
 As such, ERM  necessarily has reduced representational power compered to the unconstrained relational model. 
 However, the gain in conceptual clarity for practical database design processes was thought to outweigh the loss of capabilities.

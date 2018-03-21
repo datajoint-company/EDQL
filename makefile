@@ -5,7 +5,6 @@ $(FILE).pdf: *.tex *.bib
 	bibtex $(FILE)
 	pdflatex $(FILE)
 	pdflatex $(FILE)
-	open $(FILE).pdf
 
 clean:
 	\rm *.aux *.blg *.out *.bbl *.log
