@@ -38,6 +38,7 @@
     aboveskip={0.5\baselineskip},
     columns=fixed,
     frame=none,
+    captionpos=b,
     showstringspaces=false,
     extendedchars=false,
     breaklines=true,
@@ -50,7 +51,7 @@
     framexleftmargin=2pt,
     identifierstyle=\color{Black},
     keywordstyle=\bfseries\color{DarkSlateBlue},
-    commentstyle=\color{gray}\itshape\small,
+    commentstyle=\color{Sienna}\itshape\small,
     stringstyle=\color{Indigo},
     numberstyle=\tiny\color{DarkGray}}
 
@@ -62,14 +63,14 @@
   identifierstyle=\color{Black},
   sensitive=true,
   morecomment=[l][\color{Teal}\bfseries]{::},
-  morecomment=[l][\color{DarkGray}\itshape\small]{\#},
+  morecomment=[l][\color{Sienna}\itshape\small]{\#},
   stringstyle=\color{Indigo},
   morestring=[b]',
   morestring=[b]"
 }
 
 \newfloat{lstfloat}{htbp}{lop}
-\floatname{lstfloat}{Listing}
+%\floatname{lstfloat}{Listing}
 
 \title{\datajoint: A Simpler Relational Data Model}
 
@@ -96,7 +97,7 @@ The relational data model is defined by the principles of data representation, d
 \begin{tabu}{|X|}
 \hline
 {\bf Data representation.} Data are represented and manipulated in the form of \emph{relations}. 
-A relation is a set (unordered collections) of \emph{tuples} of values for each of the respective named \emph{attributes} of the relation.
+A relation is a \emph{set} (\emph{i.e.}\ an unordered collection) of \emph{tuples} of values for each of the respective named \emph{attributes} of the relation.
 \emph{Base relations} represent stored data while \emph{derived relations} are formed from base relations as a result of data queries.
 A collection of base relations with their attributes, domain constraints, uniqueness constraints, and referential constraints is called a \emph{schema}.
 
@@ -223,13 +224,13 @@ Could a programming language tailored to ERM be made clearer and more expressive
 For example, in the general relational data model, a foreign key may reference an arbitrary subset of attributes. In the ERM, the foreign key always references the primary key of the referenced entity set with an equivalent subset of attributes in the referencing relationship set.  Therefore, an ERM-specific schema definition language could simplify the definition and use of foreign keys.
 
 Consider the following section of SQL table definition code defining a foreign key to the {\tt Course} table whose primary key comprises attributes ({\tt dept}, {\tt course}):
-\begin{lstlisting}[language=SQL]
+\begin{lstlisting}[language=SQL,morekeywords={COMMENT, REFERENCES, unsigned}]
 dept char(6) NOT NULL COMMENT 
-"abbreviated department name, e.g. BIOL",
+  "abbreviated department name, e.g. BIOL",
 course int unsigned NOT NULL COMMENT 
-"course number, e.g. 1010",
+  "course number, e.g. 1010",
 FOREIGN KEY (dept, course) 
-    REFERENCES Course(dept, course)
+  REFERENCES Course(dept, course)
 \end{lstlisting}
 In an ERM-tailored language, the equivalent foreign key definition could become simply
 \begin{lstlisting}[language=dj]
@@ -237,7 +238,7 @@ In an ERM-tailored language, the equivalent foreign key definition could become 
 \end{lstlisting}
 if the referencing attribute names are the same as the the referenced names.
 
-The simplified definition combines two jobs in one step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
+The simplified definition combines two jobs into a single step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
 
 This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they tend to follow ERM designs. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
 
@@ -273,15 +274,13 @@ These criteria are
 \item All attributes of a relation must be applicable directly to each of its elements, although some attribute values may be missing (set to null).  
 \item All elements of a relation must be distinguishable form each other by the same primary key.
 \item Primary key attribute values cannot be missing (set to null).
-\item All elements of a relation can participate in the same relationships with other entity sets.
+\item All elements of a relation participate in the same types of relationships with other entity sets.
 \end{enumerate}
 
 Entity normalization parallels two concepts from conventional relational database theory: \emph{normal forms} and the \emph{entity integrity constraint}.
 Decomposition  of data into entity sets that meet Criteria 1--5 ensure that the schema meets the criteria defined by the Boyce-Codd normal form.
  
-
-
-\datajoint requires  entity integrity in both base relations and derived relations.  
+\datajoint respects entity normalization in both base relations and derived relations.  
 The adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
 In schema design, it become the guiding principle for normalized design.
 For queries, \datajoint's relational operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
@@ -298,7 +297,7 @@ A university database is a popular example for demonstrating database design and
 Listing \ref{lst:uni1} defines three base entity sets {\tt Student}, {\tt Department}, and {\tt StudentMajor}.
 
 \begin{lstfloat*}
-\begin{lstlisting}[language=dj]
+\begin{lstlisting}[language=dj,caption={University database schema definition (Part 1).},label={lst:uni1}]
 ::Student     
 student_id : int unsigned   # university-wide ID number 
 ---
@@ -322,8 +321,6 @@ dept_phone   : varchar(14)
 -> Department
 declare_date :  date  # when student declared her major  
 \end{lstlisting}
-\caption{University database schema definition (Part 1).}
-\label{lst:uni1}
 \end{lstfloat*}
 
 Each entity set begins with the line specifying the entity name as 
@@ -336,23 +333,24 @@ Thus the entity set {\tt Student} contains all students from our university.
 
 \subsubsection{Attributes and their datatypes}
 The remaining lines of an entity definition define entity attributes in the form
-\begin{lstlisting}[language=dj, frame=none]
+\begin{lstlisting}[language=dj]
 attribute_name : datatype   # comment
 \end{lstlisting}
 The comment is optional.
 
 A variety of datatypes may be used.  In our examples, we will use the following datatypes familiar from SQL.
-\begin{description}
-\item[{\tt int}] --  a 32-bit signed integer 
-\item[{\tt int unsigned}] -- a 32-bit unsigned integer
-\item[{\tt decimal(n,m)}] -- a decimal number with {\tt n} total digits and {\tt m} fractional digits
-\item[{\tt char(n)}, {\tt varchar(n)}] -- a string of up to {\tt n} characters
-\item[{\tt date}] -- a calendar date
-\item[{\tt enum('one','two','three')}] -- a value from an enumerated set of values
-\end{description}
+\begin{itemize}
+\item \lstinline$int$ -- 32-bit signed integer 
+\item \lstinline$int unsigned$ -- 32-bit unsigned integer
+\item \lstinline$decimal(n,m)$ -- decimal number with {\tt n} total digits and {\tt m} fractional digits
+\item \lstinline$char(n)$, \lstinline$varchar(n)$ -- a string of up to {\tt n} characters
+\item \lstinline$date$ -- calendar date
+\item \lstinline$year$ -- calendar year 
+\item \lstinline$enum('one','two','three')$ -- element from the enumerated set of values
+\end{itemize}
 
 \begin{lstfloat*}
-\begin{lstlisting}[language=dj]
+\begin{lstlisting}[language=dj,caption={University database schema definition (Part 2).}, label={lst:uni2}]
 ::Course     
 -> Department
 course  : int unsigned   # course number, e.g. 1010
@@ -390,8 +388,6 @@ points : decimal(3,2)
 -> LetterGrade
 
 \end{lstlisting}
-\caption{University database schema definition (Part 2).}
-\label{lst:uni2}
 \end{lstfloat*}
 
 \begin{figure}
@@ -421,30 +417,36 @@ points : decimal(3,2)
 \subsection{Join compatibility}
 \subsection{Restriction}
 \subsubsection{Restriction by attribute conditions}
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Restrictions by attribute conditions.}, label={lst:res1}]
 # Students from Texas
 Student & home_state == "TX"
 # Students not from Texas
 Student & home_state <> "TX"
 Student \ home_state == "TX"
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python]
 # Male students from outside Texas
-Student & sex == "M" & home_state <> "TX"
 Student & sex == "M" \ home_state == "TX"
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
-# Students from TX, OK, or NM
-Student & [
-   {'home_state':'OK'}, 
-   {'home_state':'NM'}, 
-   {'home_state':'TX'}] 
-Student & 'home_state in ("OK", "NM", "TX")'
+\begin{lstlisting}[language=Python, caption={Assignment and use of relational variables.}, label={lst:res2}]
+Millenial = Student & 
+   date_of_birth >= "1980-01-01" & 
+   date_of_birth < "2001-01-01"
+MillenialMale = Millenial & sex == "M"
 \end{lstlisting}
 
-\subsubsection{Restriction by other relations}
+\subsubsection{Restriction by a mapping}
+
+\subsubsection{Restriction by a collection}
+\begin{lstlisting}[language=Python, caption={Restrictions by a collection of conditions.}, label={lst:res4}]
+# Students from Texas, Oklahoma, or New Mexico
+Student & [
+   home_state == "OK", 
+   home_state == "NM", 
+   home_state == "TX"] 
+\end{lstlisting}
+
+
+\subsubsection{Restriction by a relation}
 \begin{lstlisting}[language=Python]
 # Students who have taken classes
 Student & Enroll
@@ -598,16 +600,17 @@ U(home_state, sex).aggr(Student,
 \begin{lstlisting}[language=Python, morekeywords={avg, U}]
 GPA = Student.aggr(sex,
     Course * Grade * LetterGrade,
-    gpa: sum(points * credits)/
+    gpa: sum(points * credits) /
          sum(credits))
 
-GpaBySex = U(sex).aggr(GPA, avg_gpa: avg(gpa))
+GpaBySex = U(sex).aggr(GPA, 
+    avg_gpa: avg(gpa))
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, morekeywords={avg, U}]
 # Gender neutral-names
 SexRatio = U(first_name).aggr(Student, 
-    fraction_male = avg(sex == "M")) 
+    fraction_male: avg(sex == "M")) 
 
 GenderNeutral = SexRatio & 
     fraction_male > 0 & fraction_male < 1
@@ -615,11 +618,11 @@ GenderNeutral = SexRatio &
 
 \begin{lstlisting}[language=Python, morekeywords={avg, U}]
 # Students with the same birthdays
-s2 = Student.proj(date_of_birth, 
+s = Student.proj(date_of_birth, 
     other: student_id) * 
     U(date_of_birth)
 
-SharedBday = Student * s2 & 
+SameBirthday = Student * s & 
     student_id < other
 \end{lstlisting}
 
@@ -644,17 +647,17 @@ The relational data model and its query languages relational algebra and relatio
 SQL is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
 
 \section{Acknowledgements}
-We conceived and began work on DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
+I conceived DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
+Initially implemented as a thin MySQL API in MATLAB, it defined the major principles of the DataJoint model summarized here. 
 Many students and postdocs in the lab as well as collaborators and early adopters have contributed to the project.
 In particular, Alexander S.\ Ecker, Philipp Berens, Andreas Hoenselaar, and R.\ James Cotton contributed to the formulation of the overall requirements for the data model and critical reviews of DataJoint development.
 Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the DataJoint Python library. 
-Jacob Reimer and Emmanouil Froudarakis became early adopters within the Andreas Tolias Lab and propelled development.
-Outside the Tolias lab, the first labs to adopt DataJoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at University of T\"ubingen.
- In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the DataJoint framework. 
-
+Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Tolias' Lab and propelled development.
+Outside the Tolias lab, the first labs to adopt DataJoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
+In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the DataJoint framework. 
 
 \appendix
-\section{Entity normalization and the Boyce-Codd Normal Form}.
+\section{Entity normalization vs.\ Normal Forms}.
 
 \section{Differences from SQL}
 Faithful adherence to the relational data model. 
