@@ -8,8 +8,7 @@
 \usepackage[table,svgnames]{xcolor}
 \usepackage{multirow}
 \usepackage{tabu}
-\usepackage{float}
-\usepackage{listings}
+\usepackage{float} \usepackage{listings}
 \usepackage{xspace} 
 \bibliographystyle{unsrtnat}
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
@@ -32,14 +31,13 @@
 \graphicspath{{./figures/}}
 
 \lstset{
-    backgroundcolor=\color{white},
+    backgroundcolor=\color{AliceBlue},
     tabsize=4,
-    basicstyle=\ttfamily,
+    basicstyle=\ttfamily\small,
     breaklines=true
-    framextopmargin=50pt,
     aboveskip={0.5\baselineskip},
     columns=fixed,
-    frame=single,
+    frame=none,
     showstringspaces=false,
     extendedchars=false,
     breaklines=true,
@@ -47,22 +45,25 @@
     showtabs=false,
     showspaces=false,
     showstringspaces=false,
-    identifierstyle=\color[rgb]{0.0,0.2,0.0},
-    keywordstyle=\bfseries\color[rgb]{0.2,0.2,0.6},
-    commentstyle=\color[rgb]{0.4,0.6,0.6},
-    stringstyle=\color[rgb]{0.6,0.0,0.2},
-    numberstyle=\tiny\color[rgb]{0.6, 0.6, 0.6}}
+    framextopmargin=50pt,
+    xleftmargin=2pt,
+    framexleftmargin=2pt,
+    identifierstyle=\color{Black},
+    keywordstyle=\bfseries\color{DarkSlateBlue},
+    commentstyle=\color{gray}\itshape\small,
+    stringstyle=\color{Indigo},
+    numberstyle=\tiny\color{DarkGray}}
 
 \lstdefinelanguage{dj}{
   keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal},
   keywordstyle=\color{blue},
   keywords=[2]{boolean, string, number, objectid},
   keywordstyle=[2]\color{green}\bfseries,
-  identifierstyle=\color{black},
+  identifierstyle=\color{Black},
   sensitive=true,
-  morecomment=[l][\color{teal}\bfseries]{::},
-  morecomment=[l][\color{gray}\itshape\small]{\#},
-  stringstyle=\color{red},
+  morecomment=[l][\color{Teal}\bfseries]{::},
+  morecomment=[l][\color{DarkGray}\itshape\small]{\#},
+  stringstyle=\color{Indigo},
   morestring=[b]',
   morestring=[b]"
 }
@@ -222,7 +223,7 @@ Could a programming language tailored to ERM be made clearer and more expressive
 For example, in the general relational data model, a foreign key may reference an arbitrary subset of attributes. In the ERM, the foreign key always references the primary key of the referenced entity set with an equivalent subset of attributes in the referencing relationship set.  Therefore, an ERM-specific schema definition language could simplify the definition and use of foreign keys.
 
 Consider the following section of SQL table definition code defining a foreign key to the {\tt Course} table whose primary key comprises attributes ({\tt dept}, {\tt course}):
-\begin{lstlisting}[language=SQL,frame=none]
+\begin{lstlisting}[language=SQL]
 dept char(6) NOT NULL COMMENT 
 "abbreviated department name, e.g. BIOL",
 course int unsigned NOT NULL COMMENT 
@@ -231,17 +232,14 @@ FOREIGN KEY (dept, course)
     REFERENCES Course(dept, course)
 \end{lstlisting}
 In an ERM-tailored language, the equivalent foreign key definition could become simply
-\begin{lstlisting}[language=dj,frame=none]
+\begin{lstlisting}[language=dj]
 -> Course
 \end{lstlisting}
-or, if the referencing attribute names differ from the referenced names, the foreign key would specify the mapping as follows, for example:
-\begin{lstlisting}[language=dj,frame=none]
--> Course(course_id: course)
-\end{lstlisting}
+if the referencing attribute names are the same as the the referenced names.
 
-These simplified definitions combine two jobs in one step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints in a single step.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
+The simplified definition combines two jobs in one step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
 
-This syntax simplification would serve most (perhaps over 99\%) of common uses of foreign keys since they tend to follow ERM designs. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
+This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they tend to follow ERM designs. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
 
 Since ERM constrains schema definitions, it reduces the representational power of the general relational data model and skirts around some of its more esoteric capabilities. 
 For example, ERM is incapable of representing multiple functional dependencies between overlapping sets of attributes whereas the broader relational theory can accomplish such feats through use of referential constraints prohibited in ERM {\em cf.\ fifth normal form}.
@@ -329,7 +327,7 @@ declare_date :  date  # when student declared her major
 \end{lstfloat*}
 
 Each entity set begins with the line specifying the entity name as 
-\begin{lstlisting}[language=dj, frame=none]
+\begin{lstlisting}[language=dj]
 ::EntityName 
 \end{lstlisting}
 
@@ -423,36 +421,207 @@ points : decimal(3,2)
 \subsection{Join compatibility}
 \subsection{Restriction}
 \subsubsection{Restriction by attribute conditions}
-\begin{lstlisting}[language=python, frame=None]
+\begin{lstlisting}[language=Python]
 # Students from Texas
-Student & {'home_state': 'TX'}
-Student & 'home_state="TX"'
+Student & home_state == "TX"
+# Students not from Texas
+Student & home_state <> "TX"
+Student \ home_state == "TX"
 \end{lstlisting}
 
-\begin{lstlisting}[language=python, frame=None]
+\begin{lstlisting}[language=Python]
 # Male students from outside Texas
-Student - {'home_state': 'TX'}
-Student - 'home_state="TX"'
-Student & 'home_state <> "TX"'
+Student & sex == "M" & home_state <> "TX"
+Student & sex == "M" \ home_state == "TX"
 \end{lstlisting}
 
-\begin{lstlisting}[language=python, frame=None]
-# Male students from outside Texas
-Student & {'sex="M" and home_state <> "TX"'}
-(Student & {'sex':"M"}) - {'home_state': "TX"}
+\begin{lstlisting}[language=Python]
+# Students from TX, OK, or NM
+Student & [
+   {'home_state':'OK'}, 
+   {'home_state':'NM'}, 
+   {'home_state':'TX'}] 
+Student & 'home_state in ("OK", "NM", "TX")'
 \end{lstlisting}
-
 
 \subsubsection{Restriction by other relations}
-\subsubsection{Restriction by a list}
+\begin{lstlisting}[language=Python]
+# Students who have taken classes
+Student & Enroll
+# Students who have not taken classes
+Student \ Enroll
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Students who have taken Biology classes but no MATH courses
+Student & 
+  (Enroll & dept == "BIOL") \ 
+  (Enroll & dept == "MATH")
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Students who have not selected a major
+Student \ StudentMajor
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Students who are taking courses in the current term
+Student \ (Enroll & CurrentTerm)
+
+# Students who have taken classes and have chosen a major
+Student & Enroll & StudentMajor 
+
+#Students who have taken classes or have chosen a major
+Student & [Enroll, StudentMajor]
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Enrollment in courses from the same department as the students' major
+Enroll & StudentMajor
+\end{lstlisting}
+
+\subsubsection{Restriction by a collection}
 
 \subsection{Join}
+\begin{lstlisting}[language=Python]
+# Grade point values
+Grade * LetterGrade
+\end{lstlisting}
+\begin{lstlisting}[language=Python]
+# Graded enrollments with complete course and student information
+Student * Enroll * Course * Section * Grade * LetterGrade
+\end{lstlisting}
+\begin{lstlisting}[language=Python]
+# Students with ungraded courses in current term
+Student & (Enroll * CurrentTerm \ Grade)
+\end{lstlisting}
+\begin{lstlisting}[language=Python]
+# Grade point values
+Grade * LetterGrade
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Enrollments before students' date of birth
+Student * Enroll & (term_year <= date_of_birth)
+\end{lstlisting}
+
 \subsection{Projection}
-\subsection{Rename}
+\begin{lstlisting}[language=Python]
+# Student name and major
+Student.proj(first_name, last_name)*
+    StudentMajor.proj(major: dept)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Enrollment with major information
+Enroll * StudentMajor.proj(major: dept)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Enrollment outside chosen major
+Enroll * StudentMajor.proj(major: dept) & major <> dept
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Enrollment not matching major 
+Enroll - StudentMajor 
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Total grade points
+(Course * Grade * LetterGrade).proj(
+    total: points * credits)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Total grade points in current term
+(Course * Grade * LetterGrade).proj(
+    total: points * credits) 
+\end{lstlisting}
+
 \subsection{Union}
 \subsection{Aggregation}
+\begin{lstlisting}[language=Python]
+# Students in each section
+Section.aggr(Enroll, n: count(*))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Average grade in each course
+Course.aggr(Grade*LetterGrade, avg_grade: avg(points))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Fraction graded in each section
+(Section.aggr(Enroll,n: count(*)) * 
+ Section.aggr(Grade, m: count(*))).proj(
+    m, n, frac: m/n)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+GPA = Student.aggr(
+    Course * Grade * LetterGrade,
+    gpa: sum(points * credits)/
+         sum(credits))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# GPA in current term
+Student.aggr(GPA & CurrentTerm, 
+    gpa: sum(points * credits) / sum(credits))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python]
+# Average GPA for each major
+Department.aggr(StudentMajor * GPA, 
+    avg_gpa: avg(gpa))
+\end{lstlisting}
+
 Aggregation functions cannot be used in restrictions. 
 \subsection{Relation U}
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+# All home states
+U(home_state) & Student
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+# Unique last names
+U(last_name) & Student 
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+# Number of students from each state by sex
+U(home_state, sex).aggr(Student, 
+    n: count(*))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+GPA = Student.aggr(sex,
+    Course * Grade * LetterGrade,
+    gpa: sum(points * credits)/
+         sum(credits))
+
+GpaBySex = U(sex).aggr(GPA, avg_gpa: avg(gpa))
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+# Gender neutral-names
+SexRatio = U(first_name).aggr(Student, 
+    fraction_male = avg(sex == "M")) 
+
+GenderNeutral = SexRatio & 
+    fraction_male > 0 & fraction_male < 1
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+# Students with the same birthdays
+s2 = Student.proj(date_of_birth, 
+    other: student_id) * 
+    U(date_of_birth)
+
+SharedBday = Student * s2 & 
+    student_id < other
+\end{lstlisting}
 
 \section{Derived dependencies}\label{sec:def2}
 \subsection{Dependencies on query expressions}
@@ -472,10 +641,16 @@ Although the Entity Relationship Model was proposed as a model suitable for both
 Furthermore, the ERM's conceptual clarifications chiefly pertain to schema definition and do not provide a data query language with the same level conceptual clarification for derived results as for stored data.
 
 The relational data model and its query languages relational algebra and relational calculus are not concerned with observing. 
+SQL is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
 
-SQL in term is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
-Although most SQL programmers 
-
+\section{Acknowledgements}
+We conceived and began work on DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
+Many students and postdocs in the lab as well as collaborators and early adopters have contributed to the project.
+In particular, Alexander S.\ Ecker, Philipp Berens, Andreas Hoenselaar, and R.\ James Cotton contributed to the formulation of the overall requirements for the data model and critical reviews of DataJoint development.
+Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the DataJoint Python library. 
+Jacob Reimer and Emmanouil Froudarakis became early adopters within the Andreas Tolias Lab and propelled development.
+Outside the Tolias lab, the first labs to adopt DataJoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at University of T\"ubingen.
+ In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the DataJoint framework. 
 
 
 \appendix
