@@ -20,6 +20,8 @@
 \usepackage{authblk}
 
 \author[1,2]{Dimitri Yatsenko\thanks{dvyatsen@bcm.edu}}
+\author[1,2]{Edgar Y. Walker}
+\author[1,2]{Andreas S. Tolias}
 \affil[1]{Department of Neuroscience, Baylor College of Medicine, Houston, Texas, USA}
 \affil[2]{Vathes LLC, Houston, Texas, USA}
 
@@ -89,7 +91,7 @@ Practical implementations of \datajoint have been tested and adopted for scienti
 
 \section{Core Concepts}
 \subsection{The Relational Data Model}
-The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structuring stored as well as the most precise approach to querying data.  
+The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structuring stored data as well as the most precise approach to querying data.  
 The relational data model is defined by the principles of data representation, domain constraints, uniqueness constraints, referential constraints, and declarative queries summarised in Table \ref{tab:core}.
 
 \tabulinesep=6pt
@@ -413,6 +415,15 @@ points : decimal(3,2)
 
 \section{Query Expressions}\label{sec:query}
 \subsection{Relational operators and expressions}
+\begin{table*}[ht]
+\begin{tabu}{|X|}
+\hline
+\hline
+\end{tabu}
+\caption{DataJoint query operators.}
+\label{tab:operators}
+\end{table*}
+
 \subsection{Operational entity integrity}
 \subsection{Join compatibility}
 \subsection{Restriction}
@@ -467,7 +478,7 @@ Student \ StudentMajor
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python]
-# Students who are taking courses in the current term
+# Students who are not taking courses in the current term
 Student \ (Enroll & CurrentTerm)
 
 # Students who have taken classes and have chosen a major
@@ -637,8 +648,8 @@ A part may be in 1-to-1 relationship with its master without any new primary att
 \subsection{Dependency properties}
 
 \section{Discussion}
-The relational model for databases has been around for nearly fifty years and its use has been standardized by a wide adoption of SQL.
-However, some lack of conceptual clarity of SQL and the relational data model make them unwieldy for conceptual design and complex queries. 
+The relational model for databases has been around for nearly fifty years and its use has been standardized by the wide adoption of SQL.
+However, some lack of conceptual clarity of SQL and the relational data model make them unwieldy for conceptual design and complex queries.
 As a result, the field has converged on the understanding that database design consists of two distinct components: \emph{conceptual modeling} and \emph{logical modeling} leading to physical implementation. 
 Although the Entity Relationship Model was proposed as a model suitable for both conceptual modeling and definition of database schemas, it never replaced the refined data definition languages and evolved into a tool limited to conceptual modeling.  
 Furthermore, the ERM's conceptual clarifications chiefly pertain to schema definition and do not provide a data query language with the same level conceptual clarification for derived results as for stored data.
