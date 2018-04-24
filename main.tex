@@ -458,26 +458,21 @@ Student & [
 
 
 \subsubsection{Restriction by a relation}
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Restrictions by another entity.}, label={lst:res5}]
 # Students who have taken classes
 Student & Enroll
 # Students who have not taken classes
 Student \ Enroll
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python]
-# Students who have taken Biology classes but no MATH courses
-Student & 
-  (Enroll & dept == "BIOL") \ 
-  (Enroll & dept == "MATH")
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python]
 # Students who have not selected a major
 Student \ StudentMajor
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Composite restrictions.}, label={lst:res6}]
+# Students who have taken Biology classes but no MATH courses
+Student & 
+  (Enroll & dept == "BIOL") \ 
+  (Enroll & dept == "MATH")
+
 # Students who are not taking courses in the current term
 Student \ (Enroll & CurrentTerm)
 
@@ -488,127 +483,117 @@ Student & Enroll & StudentMajor
 Student & [Enroll, StudentMajor]
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Avoiding unintended restrictions.}, label={lst:res7}]
 # Enrollment in courses from the same department as the students' major
 Enroll & StudentMajor
-\end{lstlisting}
 
-\subsubsection{Restriction by a collection}
+# Enrollment not matching major 
+Enroll \ StudentMajor 
+\end{lstlisting}
 
 \subsection{Join}
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Combining entities.}, label={lst:join1}]
 # Grade point values
 Grade * LetterGrade
-\end{lstlisting}
-\begin{lstlisting}[language=Python]
+
 # Graded enrollments with complete course and student information
 Student * Enroll * Course * Section * Grade * LetterGrade
 \end{lstlisting}
-\begin{lstlisting}[language=Python]
+
+\begin{lstlisting}[language=Python, caption={Join in expressions.}, label={lst:join2}]
 # Students with ungraded courses in current term
 Student & (Enroll * CurrentTerm \ Grade)
-\end{lstlisting}
-\begin{lstlisting}[language=Python]
-# Grade point values
-Grade * LetterGrade
-\end{lstlisting}
 
-\begin{lstlisting}[language=Python]
 # Enrollments before students' date of birth
 Student * Enroll & (term_year <= date_of_birth)
 \end{lstlisting}
 
 \subsection{Projection}
-\begin{lstlisting}[language=Python]
-# Student name and major
-Student.proj(first_name, last_name)*
-    StudentMajor.proj(major: dept)
+\begin{lstlisting}[language=Python, caption={Selecting  attributes.}, label={lst:select}]
+# Student name
+Student.proj(first_name, last_name)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Renaming attributes.}, label={lst:rename}]
 # Enrollment with major information
-Enroll * StudentMajor.proj(major: dept)
+Student.proj(first_name, last_name) * 
+  Enroll * StudentMajor.proj(major: dept)
+
+# Enrollement in courses by students that have selected a major
+Enroll & StudentMajor.proj(major: dept)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Projection in composite expressions.}, label={lst:proj}]
 # Enrollment outside chosen major
 Enroll * StudentMajor.proj(major: dept) & major <> dept
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
-# Enrollment not matching major 
-Enroll - StudentMajor 
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Extension: calculated attributes.}, label={lst:extend}]
 # Total grade points
 (Course * Grade * LetterGrade).proj(
     total: points * credits)
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={}]
 # Total grade points in current term
 (Course * Grade * LetterGrade).proj(
-    total: points * credits) 
+    total: points * credits) & CurrentTerm
 \end{lstlisting}
 
 \subsection{Union}
+
 \subsection{Aggregation}
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Calculate summary statistics.}, label={lst:aggr1}]
 # Students in each section
 Section.aggr(Enroll, n: count(*))
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, caption={Aggregation in expressions.}, label={lst:aggr2}]
 # Average grade in each course
 Course.aggr(Grade*LetterGrade, avg_grade: avg(points))
-\end{lstlisting}
 
-\begin{lstlisting}[language=Python]
-# Fraction graded in each section
-(Section.aggr(Enroll,n: count(*)) * 
- Section.aggr(Grade, m: count(*))).proj(
-    m, n, frac: m/n)
-\end{lstlisting}
+# number of students enrolled per section
+enrolled = Section.aggr(Enroll, n: count(*))
 
-\begin{lstlisting}[language=Python]
-GPA = Student.aggr(
-    Course * Grade * LetterGrade,
+# number of students graded per section
+graded = Section.aggr(Grade, m: count(*))
+
+# fraction of enrolled students with grades
+fraction = (enrolled * graded).proj(
+    frac: m/n)
+
+# Student GPA
+graded = Course * Grade * LetterGrade
+GPA = Student.aggr(graded,
     gpa: sum(points * credits)/
          sum(credits))
-\end{lstlisting}
 
-\begin{lstlisting}[language=Python]
-# GPA in current term
-Student.aggr(GPA & CurrentTerm, 
-    gpa: sum(points * credits) / sum(credits))
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python]
 # Average GPA for each major
 Department.aggr(StudentMajor * GPA, 
     avg_gpa: avg(gpa))
 \end{lstlisting}
 
-Aggregation functions cannot be used in restrictions. 
-\subsection{Relation U}
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
-# All home states
-U(home_state) & Student
+\begin{lstlisting}[language=Python, caption={Reuse of variables}, label={lst:aggr3}]
+# GPA in current term
+Student.aggr(graded & CurrentTerm, 
+    gpa: sum(points * credits) / sum(credits))
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+Aggregation functions cannot be used in restrictions. 
+\subsection{Relation U}
+\begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:u1}]
+# All home states
+U(home_state) & Student
+
 # Unique last names
 U(last_name) & Student 
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+\begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Aggregation by a new entity.}, label={lst:u2}]
 # Number of students from each state by sex
 U(home_state, sex).aggr(Student, 
     n: count(*))
-\end{lstlisting}
 
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
 GPA = Student.aggr(sex,
     Course * Grade * LetterGrade,
     gpa: sum(points * credits) /
@@ -618,7 +603,7 @@ GpaBySex = U(sex).aggr(GPA,
     avg_gpa: avg(gpa))
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+\begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Aggregation and restriction.}, label={lst:u3}]
 # Gender neutral-names
 SexRatio = U(first_name).aggr(Student, 
     fraction_male: avg(sex == "M")) 
@@ -627,7 +612,7 @@ GenderNeutral = SexRatio &
     fraction_male > 0 & fraction_male < 1
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, morekeywords={avg, U}]
+\begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Elevation of a secondary attribute.}, label={lst:u4} ]
 # Students with the same birthdays
 s = Student.proj(date_of_birth, 
     other: student_id) * 
