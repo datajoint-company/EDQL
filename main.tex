@@ -402,7 +402,16 @@ points : decimal(3,2)
 \subsubsection{Primary key}
 
 \subsection{Dependencies}
-\subsubsection{Effects of dependencies}
+\subsubsection{Effects of dependencies}\label{sec:effects}
+Adding the dependency \lstinline$-> Ref$ to the definition of the new table \lstinline$Dependent$ has the following effects on the table definition: 
+\begin{itemize}
+\item The primary key attributes of $Ref$ are added to the definition of \lstinline$Depedent$ skipping those that are already present in the definition.
+\item The referential constraint is created prohibiting tuples in \lstinline$Dependent$ without \emph{matching} entries in \lstinline$Ref$.
+\item An index is created in \lstinline$Dependent$ to accelerate searches in \lstinline$Dependent$ given primary key values of \lstinline$Ref$.
+\end{itemize}
+
+The referential constraint works by (a) prohibiting inserts into \lstinline$Dependent$ of tuples that are missing the matching tuple in \lstinline$Ref$ and (b) propagating deletes from $Ref$ to $Dependent$ of all matching tuples.
+
 \subsubsection{Primary and secondary dependencies}
 \subsubsection{Acyclicity}
 
@@ -622,14 +631,22 @@ SameBirthday = Student * s &
     student_id < other
 \end{lstlisting}
 
-\section{Derived dependencies}\label{sec:def2}
-\subsection{Dependencies on query expressions}
+\section{Advanced schema definition}\label{sec:def2}
+\subsection{Derived dependencies}
+As described in Section \ref{sec:def1}, dependencies (foreign keys) are defined in table definitions using the arrow notation:
+\begin{lstlisting}
+-> Ref
+\end{lstlisting}
+In Section \ref{sec:def1} we only considered the case where \lstinline$Ref$ was a base relation. 
+The DataJoint model generalizes dependencies to allow referencing derived relations (entity sets).
+
 \subsection{Master-part relationship}
 The primary motivation for the master-part relationship is to inform the application that the master and all its parts should always appear together or not at all.  
 This usually means using transactions.  
 A transaction starts then the master is inserted, then all the parts, and only then the transaction is committed.  
 This way all other users only see the master entry when all its parts have been entered.
 A part may be in 1-to-1 relationship with its master without any new primary attributes.
+
 \subsection{Dependency properties}
 
 \section{Discussion}
@@ -643,7 +660,7 @@ The relational data model and its query languages relational algebra and relatio
 SQL is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
 
 \section{Acknowledgements}
-I conceived DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
+We conceived DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
 Initially implemented as a thin MySQL API in MATLAB, it defined the major principles of the DataJoint model summarized here. 
 Many students and postdocs in the lab as well as collaborators and early adopters have contributed to the project.
 In particular, Alexander S.\ Ecker, Philipp Berens, Andreas Hoenselaar, and R.\ James Cotton contributed to the formulation of the overall requirements for the data model and critical reviews of DataJoint development.
@@ -652,14 +669,14 @@ Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Toli
 Outside the Tolias lab, the first labs to adopt DataJoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
 In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the DataJoint framework. 
 
-\appendix
-\section{Entity normalization vs.\ Normal Forms}.
+%\appendix
+%\section{Entity normalization vs.\ Normal Forms}.
 
-\section{Differences from SQL}
-Faithful adherence to the relational data model. 
-Native entity integrity.
+%\section{Differences from SQL}
+%Faithful adherence to the relational data model. 
+%Native entity integrity.
 
-\subsection{SQL Translations}
+%\subsection{SQL Translations}
 
 
 \bibliography{DataJoint}
