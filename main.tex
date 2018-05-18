@@ -80,10 +80,10 @@
 
 \maketitle
 \begin{abstract}
-We propose a simplified and conceptually refined relational data model complete with a language for schema definition and data queries as well as  diagramming notation for visualizing relationships among the data.  
+We propose a simplified and conceptually refined relational data model complete with a language for schema definition and data queries as well as diagramming notation for visualizing relationships among entities.  
 Named \datajoint, the model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity types.  
 \datajoint's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to entity normalization. 
-Practical implementations of \datajoint have been tested and adopted for scientific data pipelines by a number of leading science labs, allowing interaction with scientific data that is more fluent than with other data management solutions.
+Practical implementations of \datajoint have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
 \end{abstract}
 \tableofcontents 
 
@@ -238,11 +238,11 @@ In an ERM-tailored language, the equivalent foreign key definition could become 
 \begin{lstlisting}[language=dj]
 -> Course
 \end{lstlisting}
-if the referencing attribute names are the same as the the referenced names.
+if the referencing attribute names are the same as the referenced names.
 
 The simplified definition combines two jobs into a single step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
 
-This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they tend to follow ERM designs. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
+This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they typically follow ERM conventions. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
 
 Since ERM constrains schema definitions, it reduces the representational power of the general relational data model and skirts around some of its more esoteric capabilities. 
 For example, ERM is incapable of representing multiple functional dependencies between overlapping sets of attributes whereas the broader relational theory can accomplish such feats through use of referential constraints prohibited in ERM {\em cf.\ fifth normal form}.
@@ -268,24 +268,24 @@ To expressively depict this variety of dependencies, \datajoint introduces its o
 
 
 \subsection{Entity normalization}\label{sec:norm}
-Let's define \emph{entity normalization} as the requirement that all data must be represented in the form of relations that meet the criteria of a well-formed entity set.
+By \emph{entity normalization} we denote the requirement that all data exist in the form of relations that meet the criteria of well-formed entity sets.
 
-These criteria are
+A well-formed entity set is a relation that meets the following criteria:
 \begin{enumerate}
-\item Any relation must represent a well-defined and readily identified class of entities from the model world.
-\item All attributes of a relation must be applicable directly to each of its elements, although some attribute values may be missing (set to null).  
-\item All elements of a relation must be distinguishable form each other by the same primary key.
+\item All elements of the relation belong to the same well-defined and readily identified entity type from the model world.
+\item All attributes of the relation are applicable directly to each of its elements, although some attribute values may be missing (set to null).  
+\item All elements of the relation must be distinguishable form each other by the same \emph{primary key}.
 \item Primary key attribute values cannot be missing (set to null).
-\item All elements of a relation participate in the same types of relationships with other entity sets.
+\item All elements of the relation participate in the same types of relationships with other entity sets.
 \end{enumerate}
 
-Entity normalization parallels two concepts from conventional relational database theory: \emph{normal forms} and the \emph{entity integrity constraint}.
-Decomposition  of data into entity sets that meet Criteria 1--5 ensure that the schema meets the criteria defined by the Boyce-Codd normal form.
- 
-\datajoint respects entity normalization in both base relations and derived relations.  
-The adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
-In schema design, it become the guiding principle for normalized design.
+Adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
+\datajoint respects entity normalization in both base relations and derived relations resulting from query operations (Section \ref{sec:query}.  
+In schema design, entity normalizations serves as the guiding principle for efficient and sensible design.
 For queries, \datajoint's relational operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
+
+Entity normalization bears parallels with two concepts from conventional relational database theory: \emph{normal forms} and the \emph{entity integrity constraint}.
+Decomposition  of data into entity sets that meet Criteria 1--5 ensure that the schema meets the criteria defined by the Boyce-Codd normal form.
 
 In established relational database theory, the \emph{entity integrity constraint} refers to the requirement that base relations in a schema  must have an explicitly defined primary key and that values of the primary key attributes cannot be missing (set to null).  
 This is a much narrowed definition of entity integrity.
@@ -399,23 +399,99 @@ points : decimal(3,2)
 \end{figure}
 
 
-\subsubsection{Primary key}
+\subsection{Primary key}
+A major ingredient of \emph{data integrity} is \emph{entity integrity}: identifiability and uniqueness of entity representations in the database. 
+{Primary keys} are the principal tool for communicating and enforcing entity integrity. 
+Any entity set must have a primary key: a set of attributes that, jointly, distinguish elements of the relation from each other.
+No two elements of the same entity set can share the same value of the primary key or, in other words, the same combination of values of primary attributes.
+
+In each table declaration (e.g.\ Listings \ref{lst:uni1} and \ref{lst:uni2}), the dividing line \lstinline$---$ separates the \emph{primary key} attributes above from other attributes below.  
+Each entity set must have a primary key although it may comprise multiple attributes. 
+For brevity, we refer to the attributes in the primary key as \emph{primary attributes} and all others as \emph{secondary attributes}.
+
+For example, the primary key of entity set \lstinline$Student$ (Listing \ref{lst:uni1}) contains one attribute \lstinline$student_id$.  
+No two elements in \lstinline$Student$ can share the same value of \lstinline$student_id$. 
+Consequently, any element can be uniquely identified by \lstinline$student_id$ alone. 
+
+The primary key of entity set \lstinline$Term$ (Listing \ref{lst:uni2}) contains two attributes: \lstinline$term_year$ and \lstinline$term$.
+This means that a pair of elements of \lstinline$Term$ can be in the same \lstinline$term_year$ or in the same \lstinline$term$ but cannot be together in both. 
+
+If the primary key of a particular entity set contains zero attributes, it cannot distinguish any two elements within the set.  
+Consequently, an entity set with an empty primary key can contain only one element at most.
+This makes sense for entity set \lstinline$CurrentTerm$ in Listing \ref{lst:uni2}, which contains the value of the academic term currently in session; and only one session can be current at any time.
+
+\subsubsection{Phantom attribute $\omega$}\label{sec:phantom}
+In explaining the DataJoint data model, we find helpful to introduce the concept of the phantom attribute $\omega$ that is always present in the primary key of any entity set.  
+The domain of $\omega$ contains only one element, \lstinline$"1"$, which is also the default value for $\omega$.
+The phantom attribute is entirely contrived since it carries no information: all elements of any entity set would always have the same value for this attribute.
+However, the phantom attribute may help in conceptual understanding and interpretation of the model.
+For example, one may thing of the empty primary key as rather a primary key comprising only the phantom attribute $\omega$, which can only take on one value.
+ 
+\subsubsection{No surrogate keys}
+A \emph{surrogate key} is defined, with some variation, as an attribute that is artificially introduced by the database system to uniquely identify entities. 
+It is considered \emph{surrogate} rather than \emph{natural} because the corresponding real-world entity does not \emph{naturally} possess it.
+Common strategies for generating surrogate key values are sequentially incrementing integer numbers or universally-unique identifiers (randomized sequences that are sufficiently long to guarantee uniqueness).
+
+This distinction causes much confusion.  The concept of Entity Normalization (Section \ref{sec:norm}) is incompatible with the notation of surrogate keys.
+
+We suggest an alternative test. Namely, does the overall data management process  ensure one-to-one correspondence between real-world entities and the identifying attribute in the table that represents them?
+
+If the answer is yes, then the attribute is the primary key. It does not matter whether the real-world entity already possessed it before data entry or if it was generated by the database system.
+
+If the answer is no, then the table does not represent this entity set.  Instead it represents somethings else, perhaps a set of records in the database about the real world entities.  Rather than call its identifying attribute ``surrogate'', we should be honest about what the table represents. 
+
+By naming the table \lstinline$Student$, I declare that a reliable mechanism exists to ensure one-to-one correspondence between entities of type Student in the modeled universe and the identifying attributes in table \lstinline$Student$.
+If I do not have such mechanisms and I only ensure uniqueness of records, I do not have the right to name the table \lstinline$Student$.
+I might like to called it \lstinline$StudentRegistrationRecord$ instead. 
 
 \subsection{Dependencies}
+Another ingredient of data integrity is \emph{referential integrity}, which in DataJoint is communicated and enforced through \emph{foreign key dependencies} or simply \emph{dependencies}.
+
+A foreign key dependency is declared in a table definition as 
+\begin{lstlisting}
+-> Ref 
+\end{lstlisting}
+where \lstinline$Ref$ is another entity set.
+
+For example, entity set \lstinline$StudentMajor$ (Listing \ref{lst:uni1}) declares two dependencies: on \lstinline$Student$ from its primary key and on \lstinline$Department$ as a secondary attribute.
+
+In the simpler use cases shown in Listings \ref{lst:uni1} and \ref{lst:uni2}, the referenced entity sets are base. 
+Section \ref{sec:dep} describes more general cases when \lstinline$Ref$ may be derived entity sets.
+
 \subsubsection{Effects of dependencies}\label{sec:effects}
-Adding the dependency \lstinline$-> Ref$ to the definition of the new table \lstinline$Dependent$ has the following effects on the table definition: 
-\begin{itemize}
-\item The primary key attributes of $Ref$ are added to the definition of \lstinline$Depedent$ skipping those that are already present in the definition.
+If the new table is \lstinline$Dependent$, then this declaration has the following effects: 
+\begin{enumerate}
+\item The primary key attributes of \lstinline$Ref$ are added to the definition of \lstinline$Dependent$ skipping those that are already present in the definition.
 \item The referential constraint is created prohibiting tuples in \lstinline$Dependent$ without \emph{matching} entries in \lstinline$Ref$.
 \item An index is created in \lstinline$Dependent$ to accelerate searches in \lstinline$Dependent$ given primary key values of \lstinline$Ref$.
-\end{itemize}
+\end{enumerate}
 
-The referential constraint works by (a) prohibiting inserts into \lstinline$Dependent$ of tuples that are missing the matching tuple in \lstinline$Ref$ and (b) propagating deletes from $Ref$ to $Dependent$ of all matching tuples.
+The referential constraint is enforced by (a) prohibiting inserts into \lstinline$Dependent$ of elements that are missing the matching elements in \lstinline$Ref$ and (b) propagating deletes from \lstinline$Ref$ to \lstinline$Dependent$ of all matching tuples.
+
+\subsubsection{Schema diagrams}\label{sec:diag}
+Entire schemas or portions of schemas may be visualized using DataJoint's diagramming notation.  
+For example, the schema defined in Listings \ref{lst:uni1} and \ref{lst:uni2} is diagrammed in Figure \ref{fig:erd}. 
+Each base entity set (table) becomes a named node in the graph with foreign key dependencies represented as its edges. 
 
 \subsubsection{Primary and secondary dependencies}
-\subsubsection{Acyclicity}
+When entity set \lstinline$B$ declares a dependency of entity set \lstinline$A$ from its primary key, the primary key attributes of \lstinline$A$ become incorporated in the primary key of \lstinline$B$.  
+Dependencies declared from the primary key are called \emph{primary dependencies} and are indicated with solid lines on the schema diagram. 
+Dependencies declared from the outside the primary key are called \emph{secondary dependencies} and are indicated with dashed lines in the schema digram.  
+In a secondary dependency, the primary attributes of \lstinline$A$ are added as secondary attributes \lstinline$B$. 
 
-\subsection{Schema diagrams}\label{sec:diag}
+Primary dependencies indicates a much closer \emph{defining relationship} between the entities. Whereas secondary dependencies create a merely \emph{referential relationship}.
+
+For example, the entity set \lstinline$StudentMajor$ declares a primary dependency onto \lstinline$Student$ and a secondary dependency onto \lstinline$Department$ (Listing \ref{lst:uni1} and Figure \ref{fig:erd}).
+
+
+\subsubsection{Acyclicity}
+In DataJoint, the graph of dependencies never contains loops or cycles.  
+In other words, any dependency diagram is an \emph{acyclic directed graph}.
+This constraint may seem excessive or unnecessary since the model can be straightforwardly modified to allow cyclic dependencies. 
+However, we find that conceptual complications arising from cyclic dependencies are not worth the benefits that they bring and we make the \emph{acyclicity} of dependencies a key property of the DataJoint model.
+
+The acyclicity of dependencies in the model does not mean that the model is not capable of representing cyclic \emph{relationships}. 
+However, it does mean that sometimes an extra entity set is necessary to represent cyclic relationships. 
 
 \section{Data manipulation}\label{sec:manip}
 \subsection{Insert}
@@ -632,7 +708,7 @@ SameBirthday = Student * s &
 \end{lstlisting}
 
 \section{Advanced schema definition}\label{sec:def2}
-\subsection{Derived dependencies}
+\subsection{Derived dependencies}\label{sec:dep}
 As described in Section \ref{sec:def1}, dependencies (foreign keys) are defined in table definitions using the arrow notation:
 \begin{lstlisting}
 -> Ref
