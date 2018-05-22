@@ -58,7 +58,7 @@
     numberstyle=\tiny\color{DarkGray}}
 
 \lstdefinelanguage{dj}{
-  keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal},
+  keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal, insert, delete},
   keywordstyle=\color{blue},
   keywords=[2]{boolean, string, number, objectid},
   keywordstyle=[2]\color{green}\bfseries,
@@ -248,7 +248,7 @@ Since ERM constrains schema definitions, it reduces the representational power o
 For example, ERM is incapable of representing multiple functional dependencies between overlapping sets of attributes whereas the broader relational theory can accomplish such feats through use of referential constraints prohibited in ERM {\em cf.\ fifth normal form}.
 Giving up some representational power was deemed a fair tradeoff for increased conceptual clarity.  The gain in conceptual clarity for practical database design processes was thought to outweigh the loss of capabilities.
 
-\subsection{DataJoint Model}
+\subsection{\datajoint Model}
 \datajoint's serves as a single coherent data model that is sufficient for clear conceptual modeling, efficient schema design, and precise and flexible data queries. 
 Similar to ERM, \datajoint is a conceptual clarification of the relational data model.  
 But it differs from ERM in several key ways. 
@@ -421,7 +421,7 @@ Consequently, an entity set with an empty primary key can contain only one eleme
 This makes sense for entity set \lstinline$CurrentTerm$ in Listing \ref{lst:uni2}, which contains the value of the academic term currently in session; and only one session can be current at any time.
 
 \subsubsection{Phantom attribute $\omega$}\label{sec:phantom}
-In explaining the DataJoint data model, we find helpful to introduce the concept of the phantom attribute $\omega$ that is always present in the primary key of any entity set.  
+In explaining the \datajoint data model, we find helpful to introduce the concept of the phantom attribute $\omega$ that is always present in the primary key of any entity set.  
 The domain of $\omega$ contains only one element, \lstinline$"1"$, which is also the default value for $\omega$.
 The phantom attribute is entirely contrived since it carries no information: all elements of any entity set would always have the same value for this attribute.
 However, the phantom attribute may help in conceptual understanding and interpretation of the model.
@@ -445,7 +445,7 @@ If I do not have such mechanisms and I only ensure uniqueness of records, I do n
 I might like to called it \lstinline$StudentRegistrationRecord$ instead. 
 
 \subsection{Dependencies}
-Another ingredient of data integrity is \emph{referential integrity}, which in DataJoint is communicated and enforced through \emph{foreign key dependencies} or simply \emph{dependencies}.
+Another ingredient of data integrity is \emph{referential integrity}, which in \datajoint is communicated and enforced through \emph{foreign key dependencies} or simply \emph{dependencies}.
 
 A foreign key dependency is declared in a table definition as 
 \begin{lstlisting}
@@ -469,7 +469,7 @@ If the new table is \lstinline$Dependent$, then this declaration has the followi
 The referential constraint is enforced by (a) prohibiting inserts into \lstinline$Dependent$ of elements that are missing the matching elements in \lstinline$Ref$ and (b) propagating deletes from \lstinline$Ref$ to \lstinline$Dependent$ of all matching tuples.
 
 \subsubsection{Schema diagrams}\label{sec:diag}
-Entire schemas or portions of schemas may be visualized using DataJoint's diagramming notation.  
+Entire schemas or portions of schemas may be visualized using \datajoint's diagramming notation.  
 For example, the schema defined in Listings \ref{lst:uni1} and \ref{lst:uni2} is diagrammed in Figure \ref{fig:erd}. 
 Each base entity set (table) becomes a named node in the graph with foreign key dependencies represented as its edges. 
 
@@ -485,33 +485,79 @@ For example, the entity set \lstinline$StudentMajor$ declares a primary dependen
 
 
 \subsubsection{Acyclicity}
-In DataJoint, the graph of dependencies never contains loops or cycles.  
+In \datajoint, the graph of dependencies never contains loops or cycles.  
 In other words, any dependency diagram is an \emph{acyclic directed graph}.
-This constraint may seem excessive or unnecessary since the model can be straightforwardly modified to allow cyclic dependencies. 
-However, we find that conceptual complications arising from cyclic dependencies are not worth the benefits that they bring and we make the \emph{acyclicity} of dependencies a key property of the DataJoint model.
+This constraint may seem unnecessary since the model can be straightforwardly extended to allow cyclic dependencies. 
+However, we find that conceptual complications arising from cyclic dependencies are not worth the benefits that they bring and we make the \emph{acyclicity} of dependencies a key property of the \datajoint model.
 
 The acyclicity of dependencies in the model does not mean that the model is not capable of representing cyclic \emph{relationships}. 
 However, it does mean that sometimes an extra entity set is necessary to represent cyclic relationships. 
 
 \section{Data manipulation}\label{sec:manip}
+The two basic operations for data manipulation in \datajoint are \emph{insert} and \emph{delete} to add or remove new elements (tuples) into base entity sets.
+
 \subsection{Insert}
+Insert adds new elements to an existing base entity set.  
+The elements (entities) to be inserted must be fully formed and the entire set is added atomically.
+Invalid elements are rejected. 
+An element may be invalid if it is incomplete, or if it violates a domain constraint (incorrect value datatype), or if it violates a unique constraint(duplicate value of the primary key), or a referential constraint (no matching entry in a referenced entity set).
+When an insert is rejected for any one element, the entire insert set is rejected.
+
+Example:
+\begin{lstlisting}[language=dj]
+insert Student (student_id, first_name, last_name, sex, date_of_birth, student_address, student_phone):
+(1000, 'Rebecca', 'Sanchez', 'F', 1997-09-13, '6604 Gentry Turnpike Suite 513', 'Andreaport', 'MN', '29376', '(250)428-1836'),
+(1001, 'Matthew', 'Gonzales', 'M', 1997-05-17, '1432 Jessica Freeway Apt. 545', 'Frazierberg', 'NE', '60485-3810', '(699)755-6306x996')
+\end{lstlisting}
+
 \subsection{Delete}
+Deletes removes a subsets of elements from a base entity set, atomically.
+To specify the subset of elements to remove, delete relies on the use of the restriction operator described in Section \ref{sec:restrict}.
+Delete from a given base entity set causes the deletion of matching subsets from all dependent entity sets based on the referential constraints.
+
+Example: 
+\begin{lstlisting}[language=dj]
+delete Student & student_id > 500 & student_id <= 1000
+\end{lstlisting}
+
 \subsection{Cautious update}
+In \datajoint, the principal way of updating the state of the database is by deletes and inserts of entire entity sets.  
+Individual entities cannot be modified: they are either inserted or deleted in their entirety. 
+
+\emph{Updates} refer to the operation of changing the values of individual attributes of entities within an entity set without replacing them.
+Updating values in place is a precarious proposition from the point of view of data integrity. 
+This has to do with the interpretation of referential constraint.  
+When a foreign key from entity set \lstinline{B} references entity set \lstinline{A}, this means that elements in \lstinline{B} are generated with respect to the value of the referenced entities in \lstinline{A} in their entirety.  
+Modifying the attributes of entities of \lstinline{A} will invalidate this assumption.
+For example, if entries of \lstinline{Section} are generated referencing \lstinline{Course}, which are in turn referenced by \lstinline{Enroll}, then changing the name of the course or the number of credit hours in \lstinline{Course} would fundamentally change the meaning of entries downstream in the pipeline.  
+If the name of the course changes in any way, then downstream entries need to be reevaluated in light of the change.
+This is particularly critical in computational pipelines where downstream entity sets contain results of computations that are based on values upstream in the pipeline.  
+
+The \datajoint model works under a fundamental data integrity contract: data inserted downstream in the dependency graph rely on the immutability of the upstream data. 
+For these reasons, updates are not part of the data manipulation model in \datajoint.
+
+However, in cases when users are confident that an update is safe and appropriate, an update operator may be provided.
 
 \section{Query Expressions}\label{sec:query}
 \subsection{Relational operators and expressions}
 \begin{table*}[ht]
-\begin{tabu}{|X|}
+\rowcolors{1}{gray!20}{white}
+\begin{tabu}{|X[1,c,p]| X[1,c]| X[1,p]| X[1, p]|}
 \hline
+\rowcolor{HeaderColor}
+{\bf operator} & {\bf notation} & {\bf meaning} & {\bf primary key} \\
+restrict & \lstinline$A \& cond$  & The subset of all elements of \lstinline$A$ that meet condition \lstinline$cond$ & same as \lstinline$A$  \\
+exclude & \lstinline$A \\ cond$  & The subset of all elements of \lstinline$A$ except those that meet condition \lstinline$cond$ & same as \lstinline$A$ \\
+join & \lstinline$A * B$ & The combination of matching elements of \lstinline$A$ and \lstinline$B$ & union of \lstinline$A$ and \lstinline$B$ \\
 \hline
 \end{tabu}
-\caption{DataJoint query operators.}
+\caption{\datajoint query operators.}
 \label{tab:operators}
 \end{table*}
 
 \subsection{Operational entity integrity}
 \subsection{Join compatibility}
-\subsection{Restriction}
+\subsection{Restriction}\label{sec:restrict}
 \subsubsection{Restriction by attribute conditions}
 \begin{lstlisting}[language=Python, caption={Restrictions by attribute conditions.}, label={lst:res1}]
 # Students from Texas
@@ -714,7 +760,7 @@ As described in Section \ref{sec:def1}, dependencies (foreign keys) are defined 
 -> Ref
 \end{lstlisting}
 In Section \ref{sec:def1} we only considered the case where \lstinline$Ref$ was a base relation. 
-The DataJoint model generalizes dependencies to allow referencing derived relations (entity sets).
+The \datajoint model generalizes dependencies to allow referencing derived relations (entity sets).
 
 \subsection{Master-part relationship}
 The primary motivation for the master-part relationship is to inform the application that the master and all its parts should always appear together or not at all.  
@@ -736,14 +782,14 @@ The relational data model and its query languages relational algebra and relatio
 SQL is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
 
 \section{Acknowledgements}
-We conceived DataJoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
-Initially implemented as a thin MySQL API in MATLAB, it defined the major principles of the DataJoint model summarized here. 
+We conceived \datajoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
+Initially implemented as a thin MySQL API in MATLAB, it defined the major principles of the \datajoint model summarized here. 
 Many students and postdocs in the lab as well as collaborators and early adopters have contributed to the project.
-In particular, Alexander S.\ Ecker, Philipp Berens, Andreas Hoenselaar, and R.\ James Cotton contributed to the formulation of the overall requirements for the data model and critical reviews of DataJoint development.
-Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the DataJoint Python library. 
+In particular, Alexander S.\ Ecker, Philipp Berens, Andreas Hoenselaar, and R.\ James Cotton contributed to the formulation of the overall requirements for the data model and critical reviews of \datajoint development.
+Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the \datajoint Python library. 
 Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Tolias' Lab and propelled development.
-Outside the Tolias lab, the first labs to adopt DataJoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
-In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the DataJoint framework. 
+Outside the Tolias lab, the first labs to adopt \datajoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
+In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the \datajoint framework. 
 
 %\appendix
 %\section{Entity normalization vs.\ Normal Forms}.
