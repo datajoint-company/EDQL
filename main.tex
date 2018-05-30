@@ -9,8 +9,7 @@
 \usepackage{multirow}
 \usepackage{tabu}
 \usepackage{float} \usepackage{listings}
-\usepackage{xspace} 
-\bibliographystyle{unsrtnat}
+\usepackage{xspace} \bibliographystyle{unsrtnat}
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -58,7 +57,7 @@
     numberstyle=\tiny\color{DarkGray}}
 
 \lstdefinelanguage{dj}{
-  keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal, insert, delete},
+  keywords={int, smallint, char, varchar, enum, unsigned, date, year, decimal, insert, delete, update},
   keywordstyle=\color{blue},
   keywords=[2]{boolean, string, number, objectid},
   keywordstyle=[2]\color{green}\bfseries,
@@ -80,10 +79,11 @@
 
 \maketitle
 \begin{abstract}
-We propose a simplified and conceptually refined relational data model complete with a language for schema definition and data queries as well as diagramming notation for visualizing relationships among entities.  
-Named \datajoint, the model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- exist in the form of sets of entities belonging to well-defined entity types.  
-\datajoint's data query language is an algebra of five operators that provide equal capabilities to those of other relational query languages with greater clarity due to entity normalization. 
-Practical implementations of \datajoint have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
+Proposed here is a simplified and conceptually refined relational data model named \datajoint. 
+The model includes a language for schema definition, a language for data queries, and diagramming notation for visualizing entities and relationships among them.  
+The model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- must exist as sets of entities where elements of each entity set belong to one well-defined entity type.
+\datajoint's data query language is an algebra on entity sets with five operators that provide matching capabilities to those of other relational query languages with greater clarity due to entity normalization. 
+Practical implementations of \datajoint in MATLAB and Python have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
 \end{abstract}
 \tableofcontents 
 
@@ -91,7 +91,7 @@ Practical implementations of \datajoint have been adopted in several neuroscienc
 
 \section{Core Concepts}
 \subsection{The Relational Data Model}
-The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structuring stored data as well as the most precise approach to querying data.  
+The relational data model \citep{codd_relational_1970} provides the most rigorous approach to structured data storage \emph{and} the most precise approach to querying data.  
 The relational data model is defined by the principles of data representation, domain constraints, uniqueness constraints, referential constraints, and declarative queries summarised in Table \ref{tab:core}.
 
 \tabulinesep=6pt
@@ -521,25 +521,26 @@ insert Student (student_id, first_name, last_name, sex, date_of_birth, student_a
 \end{lstlisting}
 
 \subsection{Delete}
-Deletes removes a subsets of elements from a base entity set, atomically.
+The \emph{delete} operation removes a subset of elements from a base entity set and the corresponding dependent subsets from any dependent entity sets, cascading recursively down the chains of dependencies.
+Deletes cascade recursively to dependent entities according to the foreign keys constraints so that deleting an entity from one entity set triggers the deletion of all matching entities downstream in the data pipeline.
+Individual delete operations are always atomic, no matter how many elements are deleted and how downstream they cascade.
 To specify the subset of elements to remove, delete relies on the use of the restriction operator described in Section \ref{sec:restrict}.
-Delete from a given base entity set causes the deletion of matching subsets from all dependent entity sets based on the referential constraints.
 
 Example: 
 \begin{lstlisting}[language=dj]
 delete Student & student_id > 500 & student_id <= 1000
 \end{lstlisting}
 
-\subsection{Cautious update}
-In \datajoint, the principal way of updating the state of the database is by deletes and inserts of entire entity sets.  
-Individual entities cannot be modified: they are either inserted or deleted in their entirety. 
+\subsection{Cautious updates}
+The \emph{update} operation modifies the values of individual attributes in an entity set.
+Although very common in other data models, updates are used sparingly in \datajoint. 
+The principal way to change the state of a \datajoint database is to delete and insert subsets of entire entities with all their attribute values already set. 
 
-\emph{Updates} refer to the operation of changing the values of individual attributes of entities within an entity set without replacing them.
 Updating values in place is a precarious proposition from the point of view of data integrity. 
 This has to do with the interpretation of referential constraint.  
-When a foreign key from entity set \lstinline{B} references entity set \lstinline{A}, this means that elements in \lstinline{B} are generated with respect to the value of the referenced entities in \lstinline{A} in their entirety.  
-Modifying the attributes of entities of \lstinline{A} will invalidate this assumption.
-For example, if entries of \lstinline{Section} are generated referencing \lstinline{Course}, which are in turn referenced by \lstinline{Enroll}, then changing the name of the course or the number of credit hours in \lstinline{Course} would fundamentally change the meaning of entries downstream in the pipeline.  
+When a foreign key from entity set \lstinline$B$ references entity set \lstinline$A$, this means that elements in \lstinline$B$ are generated with respect to the value of the referenced entities in \lstinline$A$ in their entirety.  
+Modifying the attributes of entities of \lstinline$A$ will invalidate this assumption.
+For example, if entries of \lstinline$Section$ are generated referencing \lstinline$Course$, which are in turn referenced by \lstinline$Enroll$, then changing the name of the course or the number of credit hours in \lstinline$Course$ would fundamentally change the meaning of entries downstream in the pipeline.  
 If the name of the course changes in any way, then downstream entries need to be reevaluated in light of the change.
 This is particularly critical in computational pipelines where downstream entity sets contain results of computations that are based on values upstream in the pipeline.  
 
@@ -548,8 +549,20 @@ For these reasons, updates are not part of the data manipulation model in \dataj
 
 However, in cases when users are confident that an update is safe and appropriate, an update operator may be provided.
 
+For example, the following operation updates the phone number for student ID 1001:
+\begin{lstlisting}[language=dj]
+update Student & student_id == 1001:
+    phone = "(713)555-1040x101"
+\end{lstlisting}
+
 \section{Query Expressions}\label{sec:query}
+
 \subsection{Relational operators and expressions}
+Query expressions use \emph{relational operators} to combine base entity sets to form new \emph{derived entity sets} for precise data queries.
+The result of a data query is a symbolic representation of the derived entity set: when the state of the database changes, so does the result of a query expression.
+\datajoint has only six relational operators summarized in Table \ref{tab:operators}.
+\datajoint's query expressions are \emph{algebraically closed}:  derived entity sets can be assigned to variables or used in other expressions to formulate ever more exact or complex queries.
+
 \begin{table}[ht]
 \rowcolors{1}{gray!20}{white}
 \begin{tabu}{|X[1,c,p] X[1,c] X[1,c,p,2.0cm]|}
@@ -568,8 +581,43 @@ union & \lstinline$A + B$ & The set of elements that are in either \lstinline$A$
 \label{tab:operators}
 \end{table}
 
-\subsection{Operational entity integrity}
-\subsection{Join compatibility}
+\subsection{Operational entity normalization}
+In \datajoint, the principle of \emph{entity normalization} (Section \ref{sec:norm}) extends to derived entity sets.
+Any operator produces a well-defined entity class with a designated primary key. 
+We refer to this property of \datajoint expressions as \emph{operational entity normalization}. 
+Operational entity normalization sets apart from other relational query languages, which limit the formal application of concepts of normalization and entity integrity to base entity sets.
+
+\subsection{Matching attributes}
+The binary operators in query expressions (join, restriction,  exclusions, and aggregation) require matching attributes in the two arguments for the equality comparison underlying the operation. 
+The choice of the attributes to match define the semantics of the operation. 
+Other relational query languages provide elaborate ways to specify which attributes must be matched.  
+Few of these possibilities are semantically valid.
+In relational algebra, for example, the \emph{natural join} uses attributes with the same name as one of several possible ways to specify the matching attributes.  
+Natural joins are based on the assumption that attributes with the same name in both operands have the same meaning. 
+However, natural joins lead to frequent mistakes in cases when unrelated attributes share the same names.
+
+\datajoint has a single uniform method to define the semantic of binary operators through matching attributes.  
+In this method, the matching attributes are those that share the same names in both operands of the binary operator \emph{and} trace their origin through foreign keys to the same original primary attribute of the same base entity set.
+This approach ensures that the matching operators have the same meaning. 
+
+For example, the entity sets \lstinline$StudentMajor$ and \lstinline$Enroll$ (Listings \ref{lst:uni1} and \ref{lst:uni2} Figure \ref{fig:erd}) have matching attributes \lstinline$student_id$ and \lstinline$dept$, which they acquire through a series of dependencies from the primary key of \lstinline$Student$ and \lstinline$Department$, respectively.  
+
+Then, in the binary operators 
+\begin{itemize}
+\item join \lstinline$StudentMajor * Enroll$ 
+\item restriction \lstinline$StudentMajor & Enroll$ 
+\item exclusion \lstinline$StudentMajor \ Enroll$ 
+\item aggregation \lstinline$StudentMajor.aggr(Enroll, n=count())$ 
+\end{itemize}
+ the equality of the values in these attributes from the two inputs determines the output of the operator.
+
+\datajoint's approach is more semantically refined than previously defined matching schemes since it ensures the semantic equivalence of the matching attributes.
+
+Some operators have additional constraints that may make some operands incompatible for the operation (See Sections \ref{sec:join}, \ref{sec:aggr}, \ref{sec:union}).
+
+Entity \lstinline$U$ (Section \ref{sec:u} provides a mechanism to force matching attributes that do not have a common origin.
+
+
 \subsection{Restriction}\label{sec:restrict}
 \subsubsection{Restriction by attribute conditions}
 \begin{lstlisting}[language=Python, caption={Restrictions by attribute conditions.}, label={lst:res1}]
@@ -583,10 +631,11 @@ Student & sex == "M" \ home_state == "TX"
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={Assignment and use of relational variables.}, label={lst:res2}]
-Millenial = Student & 
+Millennial = Student & 
    date_of_birth >= "1980-01-01" & 
    date_of_birth < "2001-01-01"
-MillenialMale = Millenial & sex == "M"
+
+MillennialMale = Millennial & sex == "M"
 \end{lstlisting}
 
 \subsubsection{Restriction by a mapping}
@@ -636,6 +685,15 @@ Enroll \ StudentMajor
 \end{lstlisting}
 
 \subsection{Join}
+The result of the join operator \lstinline$A * B$ combines \lstinline$A$ and \lstinline$B$ into a single entity set.
+
+Entity sets \lstinline$A$ and \lstinline$B$ are considered \emph{join-compatible} if the only attributes that share the same name in both entity sets are the matching attributes.
+Any two entity sets can be made join-compatible by applying appropriate projection operator (Section \ref{sec:proj}) prior to joining.
+
+The primary key of the result is the union of the primary key attributes of the operands. 
+The entity type of the result is the pairing of the entity types of the operand.  
+
+For example, the following query adds the grade points values from \lstinline$LetterGrade$ to 
 \begin{lstlisting}[language=Python, caption={Combining entities.}, label={lst:join1}]
 # Grade point values
 Grade * LetterGrade
@@ -724,7 +782,7 @@ Student.aggr(graded & CurrentTerm,
 \end{lstlisting}
 
 Aggregation functions cannot be used in restrictions. 
-\subsection{Relation U}
+\subsection{Entity U}\label{sec:u}
 \begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:u1}]
 # All home states
 U(home_state) & Student
