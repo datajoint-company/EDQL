@@ -430,9 +430,9 @@ For example, one may thing of the empty primary key as rather a primary key comp
 \subsubsection{No surrogate keys}
 In established database terminology, the term \emph{surrogate key} describes an attribute that is internally assigned by the database system to uniquely identify elements of an entity set. 
 Strategies for generating surrogate key values include serial numbers and universally-unique identifiers (randomized sequences of sufficient length to guarantee uniqueness).
-\emph{Surrogate} keys are contrasted with \emph{natural} keys, which comprise identifying attributes already associated with the entity set in the ``real-world''.
+\emph{Surrogate} keys are contrasted with \emph{natural} keys, which comprise identifying attributes already associated with the entity set in ``the real world''.
 
-For \datajoint, we dismiss the concept of surrogate keys in favor of a more consequential distinction.
+For \datajoint, we dismiss the concept of surrogate keys as logically incongruous in favor of a more consequential distinction.
 Namely, the important question to ask about any entity set is:
 \begin{quote}
 \em
@@ -507,7 +507,7 @@ However, it does mean that sometimes an extra entity set is necessary to represe
 The two basic operations for data manipulation in \datajoint are \emph{insert} and \emph{delete} to add or remove new elements (tuples) into base entity sets.
 
 \subsection{Insert}
-Insert adds new elements to an existing base entity set.  
+The \emph{insert} command inserts new elements into an existing base entity set.  
 The elements (entities) to be inserted must be fully formed and the entire set is added atomically.
 Invalid elements are rejected. 
 An element may be invalid if it is incomplete, or if it violates a domain constraint (incorrect value datatype), or if it violates a unique constraint(duplicate value of the primary key), or a referential constraint (no matching entry in a referenced entity set).
@@ -707,7 +707,9 @@ Conversely, the result of \lstinline$A \ And([])$ is empty and \lstinline$A & An
 When \lstinline$cond$ is another entity set, then the result of \lstinline$A & cond$ comprises all element from \lstinline$A$ for which there exists an element with equal values of the \emph{matching attributes}  as defined in Section \ref{sec:match}.  
 All other attributes are ignored.  
 
-\begin{lstlisting}[language=Python, caption={Restrictions by another entity.}, label={lst:res5}]
+Due to the semantic relatedness of the matching attributes, restrictions by an entity set normally produce expected intuitive results. 
+Listing \ref{lst:res5} illustrates some queries with restrictions by entity sets using our University database.
+\begin{lstlisting}[language=Python, caption={Queries with restrictions by entity sets.}, label={lst:res5}]
 # Students who have taken classes
 Student & Enroll
 # Students who have not taken classes
@@ -731,6 +733,9 @@ Student & Enroll & StudentMajor
 #Students who have taken classes or have chosen a major
 Student & [Enroll, StudentMajor]
 \end{lstlisting}
+
+The closest equivalent operators to restriction and exclusion by an entity set in conventional relational algebra are called, respectively, \emph{semijoin} and \emph{antijoin}.
+We deprecate these confusing terms because these operators are much more restriction-like than join-like in their effect.
 
 \begin{lstlisting}[language=Python, caption={Avoiding unintended restrictions.}, label={lst:res7}]
 # Enrollment in courses from the same department as the students' major
@@ -808,7 +813,8 @@ Section.aggr(Enroll, n: count(*))
 
 \begin{lstlisting}[language=Python, caption={Aggregation in expressions.}, label={lst:aggr2}]
 # Average grade in each course
-Course.aggr(Grade*LetterGrade, avg_grade: avg(points))
+Course.aggr(Grade * LetterGrade, 
+    avg_grade: avg(points))
 
 # number of students enrolled per section
 enrolled = Section.aggr(Enroll, n: count(*))
