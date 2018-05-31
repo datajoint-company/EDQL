@@ -430,7 +430,7 @@ For example, one may thing of the empty primary key as rather a primary key comp
 \subsubsection{No surrogate keys}
 In established database terminology, the term \emph{surrogate key} describes an attribute that is internally assigned by the database system to uniquely identify elements of an entity set. 
 Strategies for generating surrogate key values include serial numbers and universally-unique identifiers (randomized sequences of sufficient length to guarantee uniqueness).
-\emph{Surrogate} keys are opposed by \emph{natural} keys comprising identifying attributes originating from the ``real world''.
+\emph{Surrogate} keys are contrasted with \emph{natural} keys, which comprise identifying attributes already associated with the entity set in the ``real-world''.
 
 For \datajoint, we dismiss the concept of surrogate keys in favor of a more consequential distinction.
 Namely, the important question to ask about any entity set is:
@@ -520,11 +520,11 @@ insert Student (student_id, first_name, last_name, sex, date_of_birth, student_a
 (1001, 'Matthew', 'Gonzales', 'M', 1997-05-17, '1432 Jessica Freeway Apt. 545', 'Frazierberg', 'NE', '60485-3810', '(699)755-6306x996')
 \end{lstlisting}
 
-\subsection{Delete}
-The \emph{delete} operation removes a subset of elements from a base entity set and the corresponding dependent subsets from any dependent entity sets, cascading recursively down the chains of dependencies.
+\subsection{Delete}\label{sec:delete}
+The \emph{delete} command removes a subset of elements from a base entity set and the corresponding dependent subsets from any dependent entity sets, cascading recursively down the chains of dependencies.
 Deletes cascade recursively to dependent entities according to the foreign keys constraints so that deleting an entity from one entity set triggers the deletion of all matching entities downstream in the data pipeline.
-Individual delete operations are always atomic, no matter how many elements are deleted and how downstream they cascade.
-To specify the subset of elements to remove, delete relies on the use of the restriction operator described in Section \ref{sec:restrict}.
+Individual delete commands are executed atomically, no matter how many elements are deleted and how far downstream they cascade along dependency chains.
+To specify the subset of elements to remove, delete relies on restriction operator (Section \ref{sec:restrict}).
 
 Example: 
 \begin{lstlisting}[language=dj]
@@ -587,7 +587,7 @@ Any operator produces a well-defined entity class with a designated primary key.
 We refer to this property of \datajoint expressions as \emph{operational entity normalization}. 
 Operational entity normalization sets apart from other relational query languages, which limit the formal application of concepts of normalization and entity integrity to base entity sets.
 
-\subsection{Matching attributes}
+\subsection{Matching attributes}\label{sec:match}
 The binary operators in query expressions (join, restriction,  exclusions, and aggregation) require matching attributes in the two arguments for the equality comparison underlying the operation. 
 The choice of the attributes to match define the semantics of the operation. 
 Other relational query languages provide elaborate ways to specify which attributes must be matched.  
@@ -615,21 +615,34 @@ Then, in the binary operators
 
 Some operators have additional constraints that may make some operands incompatible for the operation (See Sections \ref{sec:join}, \ref{sec:aggr}, \ref{sec:union}).
 
-Entity \lstinline$U$ (Section \ref{sec:u} provides a mechanism to force matching attributes that do not have a common origin.
+Entity \lstinline$U$ (Section \ref{sec:u}) allows additional control of attribute matching in binary operators.
 
+\subsection{Restriction and exclusion}\label{sec:restrict}
+The \emph{restriction} operator \lstinline$A & cond$ produces an entity set comprising a subset of the elements in the left argument that meet the condition \lstinline$cond$. 
+The complementary form of restriction is the \emph{exclusion} operator \lstinline$A \ cond$.
+The two operators have similar semantics; we often use the term \emph{restriction} to refer to either  operator, considering exclusion as a particular form of restriction.
 
-\subsection{Restriction}\label{sec:restrict}
+The result of the restriction operator \lstinline$A & cond$ is an entity set with the same primary key, the same entity type as \lstinline$A$, and the same attributes.
+
+Restrictions on base entity sets can specify the subset to be deleted by the \lstinline$delete$ command (Section \ref{sec:delete}).
+
+Multiple forms of restriction exist depending on the form of \lstinline$cond$.
+
 \subsubsection{Restriction by attribute conditions}
+First, \lstinline$cond$ may be a condition on attribute values.  
+
+Listing \ref{lst:res1} illustrates restrictions by conditions.
 \begin{lstlisting}[language=Python, caption={Restrictions by attribute conditions.}, label={lst:res1}]
 # Students from Texas
 Student & home_state == "TX"
 # Students not from Texas
 Student & home_state <> "TX"
 Student \ home_state == "TX"
-# Male students from outside Texas
+# Male students not from Texas
 Student & sex == "M" \ home_state == "TX"
 \end{lstlisting}
 
+As with all query operators, the result of restriction can be assigned to a variable to be used in other queries (e.g. Listing \ref{lst:res2}).
 \begin{lstlisting}[language=Python, caption={Assignment and use of relational variables.}, label={lst:res2}]
 Millennial = Student & 
    date_of_birth >= "1980-01-01" & 
@@ -638,19 +651,62 @@ Millennial = Student &
 MillennialMale = Millennial & sex == "M"
 \end{lstlisting}
 
-\subsubsection{Restriction by a mapping}
+\subsubsection{Restriction by a key-value mapping}
+Restriction may be done by a \emph{key-value mapping} in the form \lstinline${key1: value1, ..., keyN: valueN}$, where 
+keys correspond to the attribute in the restricted entity set.  
+The key-value pairs where the key is an attribute in \lstinline$A$ become equality conditions. 
+All other key-value pairs are ignored.  
+
+For example, the two expression in Listing \ref{lst:res-map} are equivalent given the definition of \lstinline$Student$.
+\begin{lstlisting}[language=Python, caption={Equivalent expressions using restrictions by a mapping and by attribute conditions.  The condition on \lstinline$dept$ is ignored because it is not an attribute in \lstinline$Student$.}, label={lst:res-map}]
+# restriction by a key-value mapping
+Student & {
+   first_name: "Alice", 
+   last_name: "Cooper", 
+   dept: "MATH"}
+
+# equivalent attribute condition 
+Student & first_name == "Alice" & 
+    last_name == "Cooper"
+\end{lstlisting}
+
+Accordingly, restriction by an empty mapping or a mapping whose keys do not match any attributes has no effect.  
+However, exclusion by such a mapping produces the empty set.
+
+\begin{lstlisting}[language=Python, caption={Restriction by a mapping with no matching keys}, label={lst:res-empty-map}]
+# No effect 
+Student & {dept: "MATH"}
+
+# Empty set
+Student \ {dept: "MATH}
+\end{lstlisting}
 
 \subsubsection{Restriction by a collection}
-\begin{lstlisting}[language=Python, caption={Restrictions by a collection of conditions.}, label={lst:res4}]
-# Students from Texas, Oklahoma, or New Mexico
+When \lstinline$cond$ is a collection (a list or a set) of conditions, then the conditions are applied by logical disjunction, \emph{i.e.}\ logical {OR}:
+The result of \lstinline$A & [cond1, ..., condN]$ contains all elements of \lstinline$A$ that meet \emph{any} of the conditions \lstinline$cond1, ..., condN$.
+
+\begin{lstlisting}[language=Python, caption={Restrictions by a collection of conditions.}, label={lst:res-list}]
+# Students from Oklahoma, New Mexico, or Texas
 Student & [
    home_state == "OK", 
    home_state == "NM", 
    home_state == "TX"] 
 \end{lstlisting}
 
+The special function \lstinline$And$ represents logical conjunction, \emph{i.e.}\ logical {AND}, so that \lstinline$A & And([cond1, ..., condN])$ is equivalent to \lstinline$A & cond1 & ... & condN$.
+The special function \lstinline$Not$ represents logical negation so that \lstinline$A & Not(cond)$ is equivalent to \lstinline$A \ cond$.
 
-\subsubsection{Restriction by a relation}
+De Morgan's laws apply to derive logically equivalent expressions.  
+For example, \lstinline$A \ [a, b]$ is equivalent to \lstinline$A \ a \ b$ whereas \lstinline$A \ And([a, b])$ is equivalent to \lstinline$A & [Not(a), Not(b)]$ and so forth.
+
+Accordingly, the result of \lstinline$A & []$ is empty whereas \lstinline$A \ []$ has no effect and can be simplified as \lstinline$A$.
+
+Conversely, the result of \lstinline$A \ And([])$ is empty and \lstinline$A & And([])$ has no effect.
+
+\subsubsection{Restriction by an entity set}
+When \lstinline$cond$ is another entity set, then the result of \lstinline$A & cond$ comprises all element from \lstinline$A$ for which there exists an element with equal values of the \emph{matching attributes}  as defined in Section \ref{sec:match}.  
+All other attributes are ignored.  
+
 \begin{lstlisting}[language=Python, caption={Restrictions by another entity.}, label={lst:res5}]
 # Students who have taken classes
 Student & Enroll
@@ -684,7 +740,7 @@ Enroll & StudentMajor
 Enroll \ StudentMajor 
 \end{lstlisting}
 
-\subsection{Join}
+\subsection{Join}\label{sec:join}
 The result of the join operator \lstinline$A * B$ combines \lstinline$A$ and \lstinline$B$ into a single entity set.
 
 Entity sets \lstinline$A$ and \lstinline$B$ are considered \emph{join-compatible} if the only attributes that share the same name in both entity sets are the matching attributes.
@@ -710,7 +766,7 @@ Student & (Enroll * CurrentTerm \ Grade)
 Student * Enroll & (term_year <= date_of_birth)
 \end{lstlisting}
 
-\subsection{Projection}
+\subsection{Projection}\label{sec:proj}
 \begin{lstlisting}[language=Python, caption={Selecting  attributes.}, label={lst:select}]
 # Student name
 Student.proj(first_name, last_name)
@@ -742,9 +798,9 @@ Enroll * StudentMajor.proj(major: dept) & major <> dept
     total: points * credits) & CurrentTerm
 \end{lstlisting}
 
-\subsection{Union}
+\subsection{Union}\label{sec:union}
 
-\subsection{Aggregation}
+\subsection{Aggregation}\label{sec:aggr}
 \begin{lstlisting}[language=Python, caption={Calculate summary statistics.}, label={lst:aggr1}]
 # Students in each section
 Section.aggr(Enroll, n: count(*))
