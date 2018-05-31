@@ -10,6 +10,7 @@
 \usepackage{tabu}
 \usepackage{float} \usepackage{listings}
 \usepackage{xspace} \bibliographystyle{unsrtnat}
+\usepackage[toc,page]{appendix}
 \definecolor{HeaderColor}{rgb}{0.8, 0.8, 0.95}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt}
@@ -135,10 +136,10 @@ Its introduction is motivated by the need for expressive and rigorous  construct
 
 \datajoint comprises 
 \begin{itemize}
-\item a \emph{schema definition language} (Sections \ref{sec:def1} and \ref{sec:def2})
-\item a \emph{data manipulation language} (Section \ref{sec:manip})
-\item a \emph{data query language} (Section \ref{sec:query})
-\item diagramming notation for visualizing relationships between modeled entities (Section \ref{sec:diag}).
+\item a \emph{schema definition language} (Sec.\ \ref{sec:def1} and \ref{sec:def2})
+\item a \emph{data manipulation language} (Sec.\ \ref{sec:manip})
+\item a \emph{data query language} (Sec.\ \ref{sec:query})
+\item diagramming notation for visualizing relationships between modeled entities (Sec.\ \ref{sec:diag}).
 \end{itemize}
 
 Relations are often visualized as \emph{tables} with attributes corresponding to \emph{columns} and tuples corresponding to \emph{rows}.  
@@ -280,7 +281,7 @@ A well-formed entity set is a relation that meets the following criteria:
 \end{enumerate}
 
 Adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
-\datajoint respects entity normalization in both base relations and derived relations resulting from query operations (Section \ref{sec:query}.  
+\datajoint respects entity normalization in both base relations and derived relations resulting from query operations (Sec.\ \ref{sec:query}.  
 In schema design, entity normalizations serves as the guiding principle for efficient and sensible design.
 For queries, \datajoint's relational operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
 
@@ -425,7 +426,7 @@ In explaining the \datajoint data model, we find helpful to introduce the concep
 The domain of $\omega$ contains only one element, \lstinline$"1"$, which is also the default value for $\omega$.
 The phantom attribute is entirely contrived since it carries no information: all elements of any entity set would always have the same value for this attribute.
 However, the phantom attribute may help in conceptual understanding and interpretation of the model.
-For example, one may thing of the empty primary key as rather a primary key comprising only the phantom attribute $\omega$, which can only take on one value.
+For example, one may think of the empty primary key of \lstinline$CurrentTerm$ as rather a primary key comprising only the phantom attribute $\omega$, which can only take on one value.
  
 \subsubsection{No surrogate keys}
 In established database terminology, the term \emph{surrogate key} describes an attribute that is internally assigned by the database system to uniquely identify elements of an entity set. 
@@ -444,15 +445,15 @@ Indeed, trusted system-generated identifiers tend to leak into the external worl
 Other entities may be defined to exist entirely within the database system (\emph{e.g.}\ logged events) and for them the ``real word'' and the database system are one and the same.
 
 If the answer to the question above is \emph{no}, then the entity set cannot claim to represent the real entities in question. 
-Then the proper course of action may be to either provide a mechanism to ensure a unique mapping or to change the name and description of the entity set to a more accurate one, for which the answer is \emph{yes}. 
+Then the proper course of action must  be to either (a) ensure a unique mapping or (b) change the name and description of the entity set to a more accurate one, for which the answer is \emph{yes}. 
 
 For example, by naming the entity set \lstinline$Student$, I declare that I have ensured a reliable process for a unique mapping between students in the real world and the values of the primary key of \lstinline$Student$.
 In this case, I need to ensure that there is a personal verification process that precludes assignment of multiple student IDs to the same student or the same ID to multiple students.
 If the university system lacks such mechanisms and only ensures uniqueness of records by a ``surrogate key'', then I do not have the right to name the entity set \lstinline$Student$.
 I should name it \lstinline$StudentRegistrationRecord$, for example, without implication of a unique mapping to real students.
 
-In summary, \datajoint does not recognize the concept of surrogate keys.  
-Instead, it requires reliable unique identification of elements for precisely described entity sets.
+In summary, \datajoint does not admit the concept of surrogate keys.  
+Instead, it requires reliable unique identification for the elements of well-defined and accurately described entity sets.
 
 \subsection{Dependencies}
 Another ingredient of data integrity is \emph{referential integrity}, which in \datajoint is communicated and enforced through \emph{foreign key dependencies} or simply \emph{dependencies}.
@@ -504,7 +505,7 @@ The acyclicity of dependencies in the model does not mean that the model is not 
 However, it does mean that sometimes an extra entity set is necessary to represent cyclic relationships. 
 
 \section{Data manipulation}\label{sec:manip}
-The two basic operations for data manipulation in \datajoint are \emph{insert} and \emph{delete} to add or remove new elements (tuples) into base entity sets.
+The two basic commands for data manipulation are \emph{insert} and \emph{delete} to add or remove new elements (tuples) into base entity sets.
 
 \subsection{Insert}
 The \emph{insert} command inserts new elements into an existing base entity set.  
@@ -524,7 +525,7 @@ insert Student (student_id, first_name, last_name, sex, date_of_birth, student_a
 The \emph{delete} command removes a subset of elements from a base entity set and the corresponding dependent subsets from any dependent entity sets, cascading recursively down the chains of dependencies.
 Deletes cascade recursively to dependent entities according to the foreign keys constraints so that deleting an entity from one entity set triggers the deletion of all matching entities downstream in the data pipeline.
 Individual delete commands are executed atomically, no matter how many elements are deleted and how far downstream they cascade along dependency chains.
-To specify the subset of elements to remove, delete relies on restriction operator (Section \ref{sec:restrict}).
+To specify the subset of elements to remove, delete relies on restriction operator (Sec.\ \ref{sec:restrict}).
 
 Example: 
 \begin{lstlisting}[language=dj]
@@ -565,23 +566,23 @@ The result of a data query is a symbolic representation of the derived entity se
 
 \begin{table}[ht]
 \rowcolors{1}{gray!20}{white}
-\begin{tabu}{|X[1,c,p] X[1,c] X[1,c,p,2.0cm]|}
+\begin{tabu}{|X[1,c,p,0.3cm] X[1,c,1.6cm] X[1,c,p,1.6cm]|}
 \hline
 \rowcolor{HeaderColor}
 {\bf operator} & {\bf notation} & {\bf result} \\
-restrict & \lstinline$A \& cond$  & The subset of all elements of \lstinline$A$ that meet condition \lstinline$cond$ \\
-exclude & \lstinline$A \\ cond$  & The subset of all elements of \lstinline$A$ except those that meet condition \lstinline$cond$ \\
-join & \lstinline$A * B$ & The combination of matching elements of \lstinline$A$ and \lstinline$B$ \\
-project & \lstinline$A.proj(...)$ & Select, rename, and calculate attributes for \lstinline$A$ \\
-aggregate & \lstinline$A.aggr(B, ...)$ & Calculate new attributes for \lstinline$A$ using aggregation operations on attributes of matching entries in \lstinline$B$ \\
-union & \lstinline$A + B$ & The set of elements that are in either \lstinline$A$ or \lstinline$B$ or both. \\ 
+{\bf restrict} (Sec.\ \ref{sec:restrict})  & \lstinline$A \& cond$  & The subset of all elements of \lstinline$A$ that meet condition \lstinline$cond$ \\
+{\bf exclude} (Sec.\ \ref{sec:restrict}) & \lstinline$A \\ cond$  & The subset of all elements of \lstinline$A$ except those that meet condition \lstinline$cond$ \\
+{\bf join} (Sec.\ \ref{sec:join}) & \lstinline$A * B$ & The combination of matching elements of \lstinline$A$ and \lstinline$B$ \\
+{\bf project} (Sec.\ \ref{sec:proj}) & \lstinline$A.proj(...)$ & Select, rename, and calculate attributes for \lstinline$A$ \\
+{\bf aggregate} (Sec.\ \ref{sec:aggr}) & \lstinline$A.aggr(B, ...)$ & Calculate new attributes for \lstinline$A$ using aggregation operations on attributes of matching entries in \lstinline$B$ \\
+{\bf union} (Sec.\ \ref{sec:union}) & \lstinline$A + B$ & The set of elements that are in either \lstinline$A$ or \lstinline$B$ or both. \\ 
 \hline
 \end{tabu}
 \caption{\datajoint query operators.}
 \label{tab:operators}
 \end{table}
 
-\subsection{Operational entity normalization}
+\subsection{Operational entity normalization}\label{sec:operational}
 In \datajoint, the principle of \emph{entity normalization} (Section \ref{sec:norm}) extends to derived entity sets.
 Any operator produces a well-defined entity class with a designated primary key. 
 We refer to this property of \datajoint expressions as \emph{operational entity normalization}. 
@@ -691,8 +692,12 @@ Student & [
    home_state == "OK", 
    home_state == "NM", 
    home_state == "TX"] 
+
+# An equivalient restriction using the IN operator
+Student & home_state in ["OK", "NM", "TX"]
 \end{lstlisting}
 
+\subsubsection{Restriction by an And-collection}
 The special function \lstinline$And$ represents logical conjunction, \emph{i.e.}\ logical {AND}, so that \lstinline$A & And([cond1, ..., condN])$ is equivalent to \lstinline$A & cond1 & ... & condN$.
 The special function \lstinline$Not$ represents logical negation so that \lstinline$A & Not(cond)$ is equivalent to \lstinline$A \ cond$.
 
@@ -708,8 +713,8 @@ When \lstinline$cond$ is another entity set, then the result of \lstinline$A & c
 All other attributes are ignored.  
 
 Due to the semantic relatedness of the matching attributes, restrictions by an entity set normally produce expected intuitive results. 
-Listing \ref{lst:res5} illustrates some queries with restrictions by entity sets using our University database.
-\begin{lstlisting}[language=Python, caption={Queries with restrictions by entity sets.}, label={lst:res5}]
+Listing \ref{lst:res-set} illustrates some queries with restrictions by entity sets using our University database.
+\begin{lstlisting}[language=Python, caption={Queries with restrictions by entity sets.}, label={lst:res-set}]
 # Students who have taken classes
 Student & Enroll
 # Students who have not taken classes
@@ -718,7 +723,7 @@ Student \ Enroll
 Student \ StudentMajor
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={Composite restrictions.}, label={lst:res6}]
+\begin{lstlisting}[language=Python, caption={Composite restrictions.}, label={lst:res-comp}]
 # Students who have taken Biology classes but no MATH courses
 Student & 
   (Enroll & dept == "BIOL") \ 
@@ -728,7 +733,13 @@ Student &
 Student \ (Enroll & CurrentTerm)
 
 # Students who have taken classes and have chosen a major
-Student & Enroll & StudentMajor 
+Student & Enroll & StudentMajor
+
+# Students who have taken classes in their major
+Student & (Enroll & StudentMajor)
+
+# Students who are taking classes outside their major in the current term
+Student & (Enroll \ StudentMajor & CurrentTerm)
 
 #Students who have taken classes or have chosen a major
 Student & [Enroll, StudentMajor]
@@ -803,7 +814,6 @@ Enroll * StudentMajor.proj(major: dept) & major <> dept
     total: points * credits) & CurrentTerm
 \end{lstlisting}
 
-\subsection{Union}\label{sec:union}
 
 \subsection{Aggregation}\label{sec:aggr}
 \begin{lstlisting}[language=Python, caption={Calculate summary statistics.}, label={lst:aggr1}]
@@ -844,6 +854,9 @@ Student.aggr(graded & CurrentTerm,
 \end{lstlisting}
 
 Aggregation functions cannot be used in restrictions. 
+
+\subsection{Union}\label{sec:union}
+
 \subsection{Entity U}\label{sec:u}
 \begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:u1}]
 # All home states
@@ -886,14 +899,19 @@ SameBirthday = Student * s &
     student_id < other
 \end{lstlisting}
 
+\subsection{No outer joins}
+Outer joins in relational algebra and SQL that retain all the entries of the first operand (\emph{left outer join}), second operand (\emph{right outer join}), or both (\emph{full outer join}) in additon to all the elements of all the elements produced by merging the matching entities from both operands (\emph{inner join}).
+
+Outer joins violate the concept of operational entity normalization (Sections \ref{sec:norm} and \ref{sec:operational}) by mixing into one relation entities of different types with different primary keys.
+In common usage, outer joins are mostly used to prepare input for a \lstinline$GROUP BY$ operation. 
+\datajoint's \lstinline$aggr$ operator accomplishes both steps as a single operator that observes operation entity normalization.
+
+
 \section{Advanced schema definition}\label{sec:def2}
 \subsection{Derived dependencies}\label{sec:dep}
-As described in Section \ref{sec:def1}, dependencies (foreign keys) are defined in table definitions using the arrow notation:
-\begin{lstlisting}
--> Ref
-\end{lstlisting}
-In Section \ref{sec:def1} we only considered the case where \lstinline$Ref$ was a base relation. 
-The \datajoint model generalizes dependencies to allow referencing derived relations (entity sets).
+Section \ref{sec:def1} describes defining dependencies (foreign keys).
+Until now, we have only considered dependencies on base entity sets. 
+The \datajoint model generalizes dependencies to allow dependencies on derived entity sets.
 
 \subsection{Master-part relationship}
 The primary motivation for the master-part relationship is to inform the application that the master and all its parts should always appear together or not at all.  
@@ -924,14 +942,76 @@ Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Toli
 Outside the Tolias lab, the first labs to adopt \datajoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
 In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the \datajoint framework. 
 
-%\appendix
-%\section{Entity normalization vs.\ Normal Forms}.
+\begin{appendices}
 
-%\section{Differences from SQL}
-%Faithful adherence to the relational data model. 
-%Native entity integrity.
+\section{SQL Translations}
+This section contains translations of a selection of \datajoint queries from the main text into SQL. 
+\begin{lstlisting}[language=SQL, caption={SQL translations of \datajoint queries from Listing \ref{lst:res-set}}]
+-- Student & Enroll
+SELECT * 
+FROM Student 
+WHERE student_id IN (
+        SELECT student_id 
+        FROM Enroll)
 
-%\subsection{SQL Translations}
+-- Student \ Enroll
+SELECT * 
+FROM Student 
+WHERE student_id NOT IN (
+        SELECT student_id 
+        FROM Enroll)
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption={SQL translations of \datajoint queries from Listing \ref{lst:res-comp}}.]
+-- Student &
+--  (Enroll & dept == "BIOL") \
+--  (Enroll & dept == "MATH")
+SELECT * 
+FROM Student 
+WHERE student_id IN (
+        SELECT student_id 
+        FROM Enroll
+        WHERE dept == "BIOL")
+    AND student_id NOT IN (
+        SELECT student_id
+        FROM Enroll
+        WHERE dept == "MATH")
+
+-- Student \ (Enroll & CurrentTerm)
+SELECT *
+FROM Student
+WHERE student_id NOT IN (
+        SELECT student_id 
+        FROM Enroll
+        WHERE (student_id, term_year, term) IN (
+            SELECT student_id, term_year, term
+            FROM CurrentTerm))
+
+-- Student & (Enroll \ StudentMajor & CurrentTerm)
+SELECT *
+FROM Student 
+WHERE student_id IN (
+        SELECT student_id 
+        FROM Enroll
+        WHERE (student_id, dept) NOT IN ( 
+                SELECT student_id, dept 
+                FROM StudentMajor)
+            AND (term_year, term) IN (
+                SELECT term_year, term
+                FROM CurrentTerm))
+
+-- Student & [Enroll, StudentMajor]
+SELECT * 
+FROM Student
+WHERE student_id IN (
+        SELECT student_id
+        FROM Enroll)
+    OR student_id IN (
+        SELECT student_id
+        FROM StudentMajor
+
+\end{lstlisting}
+\end{appendices}
 
 
 \bibliography{DataJoint}
