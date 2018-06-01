@@ -511,7 +511,7 @@ The two basic commands for data manipulation are \emph{insert} and \emph{delete}
 The \emph{insert} command inserts new elements into an existing base entity set.  
 The elements (entities) to be inserted must be fully formed and the entire set is added atomically.
 Invalid elements are rejected. 
-An element may be invalid if it is incomplete, or if it violates a domain constraint (incorrect value datatype), or if it violates a unique constraint(duplicate value of the primary key), or a referential constraint (no matching entry in a referenced entity set).
+An element may be invalid if it is incomplete, or if it violates a domain constraint (incorrect value datatype), or if it violates a unique constraint (duplicate value in the primary key), or a referential constraint (no matching entry in a referenced entity set).
 When an insert is rejected for any one element, the entire insert set is rejected.
 
 Example:
@@ -591,11 +591,9 @@ Operational entity normalization sets apart from other relational query language
 \subsection{Matching attributes}\label{sec:match}
 The binary operators in query expressions (join, restriction,  exclusions, and aggregation) require matching attributes in the two arguments for the equality comparison underlying the operation. 
 The choice of the attributes to match define the semantics of the operation. 
-Other relational query languages provide elaborate ways to specify which attributes must be matched.  
-Few of these possibilities are semantically valid.
-In relational algebra, for example, the \emph{natural join} uses attributes with the same name as one of several possible ways to specify the matching attributes.  
-Natural joins are based on the assumption that attributes with the same name in both operands have the same meaning. 
-However, natural joins lead to frequent mistakes in cases when unrelated attributes share the same names.
+In other relational querly languages, the matching attributes must be specified explicitly in each operator, forcing developers to examine the semantics of the attributes and to write unwieldly queries.
+One shortcut to specifying matching attributes in relational algebra and SQL is used in the \emph{natural join}, where attributes are considered matching when they share the same name, based on the assumption that attributes with the same name are related semantically to correctly restrict the result.
+However, natural joins lead to frequent mistakes in cases when unrelated attributes happen to share the same names.
 
 \datajoint has a single uniform method to define the semantic of binary operators through matching attributes.  
 In this method, the matching attributes are those that share the same names in both operands of the binary operator \emph{and} trace their origin through foreign keys to the same original primary attribute of the same base entity set.
@@ -765,7 +763,7 @@ Any two entity sets can be made join-compatible by applying appropriate projecti
 The primary key of the result is the union of the primary key attributes of the operands. 
 The entity type of the result is the pairing of the entity types of the operand.  
 
-For example, the following query adds the grade points values from \lstinline$LetterGrade$ to 
+For example, Listing \ref{lst:join1} illustrates queries that combine data from multiple base entity set into a single entity set.
 \begin{lstlisting}[language=Python, caption={Combining entities.}, label={lst:join1}]
 # Grade point values
 Grade * LetterGrade
@@ -774,6 +772,7 @@ Grade * LetterGrade
 Student * Enroll * Course * Section * Grade * LetterGrade
 \end{lstlisting}
 
+Listing \ref{lst:join2} illustrates complex queries that include joins.
 \begin{lstlisting}[language=Python, caption={Join in expressions.}, label={lst:join2}]
 # Students with ungraded courses in current term
 Student & (Enroll * CurrentTerm \ Grade)
@@ -783,42 +782,73 @@ Student * Enroll & (term_year <= date_of_birth)
 \end{lstlisting}
 
 \subsection{Projection}\label{sec:proj}
+The projection operator \lstinline$A.proj(attr1, ..., attrN$ is a unary operator on the input entity set \lstinline$A$.  
+Its output is an entity set with the same entity type and cardinality as \lstinline$A$ with some attributes renamed, some secondary attributes omitted, and new calculated attributes introduced.
+A single projection operator can perform all three of these functions as a single invocation. 
+
+\subsubsection{Attribute selection}
+Projection omits all secondary attributes except those listed as arguments;
+it retains the primary attributes to guarantee that the output is a well-defined entity set.
+
+Listing \ref{lst:select} shows examples of attribute selection.
 \begin{lstlisting}[language=Python, caption={Selecting  attributes.}, label={lst:select}]
-# Student name
+# Student id, firs name, and last name
 Student.proj(first_name, last_name)
+
+# Student id only
+Student.proj()
 \end{lstlisting}
 
+\subsubsection{Renaming attributes}
+When the attribute specification in a projection call is the form \lstinline$new: old$, this renames an existing attribute in the relation from \emph{old} to \emph{new}.
+
+For example, the result of the query in Listing \ref{lst:ren1} renames attribute \lstinline$dept$ into \lstinline$major$.
+\begin{lstlisting}[language=Python, caption={Renaming attributes.}, label={lst:ren1}]
+# rename dept into major
+StudentMajor.proj(major: dept)
+\end{lstlisting}
+
+Renamings are often used to control the semantics of joins since matching attributes must have the same names. 
+For example, the first two join queries in Listing \ref{lst:rename} differ in meaning thanks to the renaming of the matching attribute \lstinline$dept$.
+In the first query, \lstinline$dept$ is among the matching attributes. In \lstinline$Grade$, \lstinline$dept$ denotes the department offering the course; in \lstinline$StudentMajor$, \lstinline$dept$ denots the students' major departments. Then the result of the join is restricted to the  enrollment records within students' major.
+In the second query, \lstinline$dept$ is renamed into \lstinline$major$; it does not restrict the enrollment records and becomes \lstinline$major$ becomes a distrinct attribute of the resulting entity set. 
+In the third query, the two attributes \lstinline$major$ and \lstinline$dept$ are used in a further restriction of the join result.
 \begin{lstlisting}[language=Python, caption={Renaming attributes.}, label={lst:rename}]
-# Enrollment with major information
-Student.proj(first_name, last_name) * 
-  Enroll * StudentMajor.proj(major: dept)
+# Grades in courses within student's major 
+Grade * StudentMajor
 
-# Enrollement in courses by students that have selected a major
-Enroll & StudentMajor.proj(major: dept)
+# Grade and major information 
+Grade * StudentMajor.proj(major: dept)
+
+# Grade outside chosen major
+Grade * StudentMajor.proj(major: dept) & major != dept
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={Projection in composite expressions.}, label={lst:proj}]
-# Enrollment outside chosen major
-Enroll * StudentMajor.proj(major: dept) & major <> dept
-\end{lstlisting}
-
-\begin{lstlisting}[language=Python, caption={Extension: calculated attributes.}, label={lst:extend}]
+\subsubsection{Calculated attributes}
+Projection can be used to calculate new attributes.  
+Calculated attributes are added to the attribute specitication list in the form \lstinline$attr: expression$.
+ 
+For example, the first query in Listing \ref{lst:calc}, the attribute \lstinline$total$ calculates the total points earned by students in each course as the product of attributes \lstinline$credits$ and \lstinline$points$ that come from \lstinline$Course$ and \lstinline$LetterGrade$, respectively, for each entry in \lstinline$Grade$.
+The second query demonstrates 
+\begin{lstlisting}[language=Python, caption={Extension: calculated attributes.}, label={lst:calc}]
 # Total grade points
-(Course * Grade * LetterGrade).proj(
+(Grade * Course * LetterGrade).proj(
     total: points * credits)
-\end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={}]
 # Total grade points in current term
 (Course * Grade * LetterGrade).proj(
+    course_name, 
     total: points * credits) & CurrentTerm
 \end{lstlisting}
 
+Calculated attributes never become primary.
 
 \subsection{Aggregation}\label{sec:aggr}
+Aggregation is a special form of projection. 
+It can do everything that a projection can do but it also allows calculating new fields using aggregation function on attributes of another entity set. 
 \begin{lstlisting}[language=Python, caption={Calculate summary statistics.}, label={lst:aggr1}]
 # Students in each section
-Section.aggr(Enroll, n: count(*))
+Section.aggr(Enroll, n: count())
 \end{lstlisting}
 
 \begin{lstlisting}[language=Python, caption={Aggregation in expressions.}, label={lst:aggr2}]
@@ -827,10 +857,10 @@ Course.aggr(Grade * LetterGrade,
     avg_grade: avg(points))
 
 # number of students enrolled per section
-enrolled = Section.aggr(Enroll, n: count(*))
+enrolled = Section.aggr(Enroll, n: count())
 
 # number of students graded per section
-graded = Section.aggr(Grade, m: count(*))
+graded = Section.aggr(Grade, m: count())
 
 # fraction of enrolled students with grades
 fraction = (enrolled * graded).proj(
@@ -869,7 +899,7 @@ U(last_name) & Student
 \begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Aggregation by a new entity.}, label={lst:u2}]
 # Number of students from each state by sex
 U(home_state, sex).aggr(Student, 
-    n: count(*))
+    n: count())
 
 GPA = Student.aggr(sex,
     Course * Grade * LetterGrade,
@@ -900,9 +930,9 @@ SameBirthday = Student * s &
 \end{lstlisting}
 
 \subsection{No outer joins}
-Outer joins in relational algebra and SQL that retain all the entries of the first operand (\emph{left outer join}), second operand (\emph{right outer join}), or both (\emph{full outer join}) in additon to all the elements of all the elements produced by merging the matching entities from both operands (\emph{inner join}).
-
-Outer joins violate the concept of operational entity normalization (Sections \ref{sec:norm} and \ref{sec:operational}) by mixing into one relation entities of different types with different primary keys.
+Outer joins in relational algebra and SQL are joins that mix  all the elements  of the first operand (\emph{left outer join}), second operand (\emph{right outer join}), or both (\emph{full outer join}) into the result of the regular, inner join of the two operands. 
+Outer joins violate the concept of operational entity normalization (Sections \ref{sec:norm} and \ref{sec:operational}) due to the mixing into one relation entities of different types with different primary keys.
+The primary key of an outer join is poorly defined and may have nulls in it, violating entity integrity.
 In common usage, outer joins are mostly used to prepare input for a \lstinline$GROUP BY$ operation. 
 \datajoint's \lstinline$aggr$ operator accomplishes both steps as a single operator that observes operation entity normalization.
 
@@ -941,20 +971,20 @@ Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the \datajo
 Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Tolias' Lab and propelled development.
 Outside the Tolias lab, the first labs to adopt \datajoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
 In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the \datajoint framework. 
-
+In June 2018, the Princeton Neuroscience Institute funded a project to generate a DataJoint user manual.  
 \begin{appendices}
 
 \section{SQL Translations}
 This section contains translations of a selection of \datajoint queries from the main text into SQL. 
 \begin{lstlisting}[language=SQL, caption={SQL translations of \datajoint queries from Listing \ref{lst:res-set}}]
--- Student & Enroll
+--     Student & Enroll
 SELECT * 
 FROM Student 
 WHERE student_id IN (
         SELECT student_id 
         FROM Enroll)
 
--- Student \ Enroll
+--     Student \ Enroll
 SELECT * 
 FROM Student 
 WHERE student_id NOT IN (
@@ -963,9 +993,9 @@ WHERE student_id NOT IN (
 \end{lstlisting}
 
 \begin{lstlisting}[language=SQL, caption={SQL translations of \datajoint queries from Listing \ref{lst:res-comp}}.]
--- Student &
---  (Enroll & dept == "BIOL") \
---  (Enroll & dept == "MATH")
+--     Student &
+--      (Enroll & dept == "BIOL") \
+--      (Enroll & dept == "MATH")
 SELECT * 
 FROM Student 
 WHERE student_id IN (
@@ -977,7 +1007,7 @@ WHERE student_id IN (
         FROM Enroll
         WHERE dept == "MATH")
 
--- Student \ (Enroll & CurrentTerm)
+--     Student \ (Enroll & CurrentTerm)
 SELECT *
 FROM Student
 WHERE student_id NOT IN (
@@ -987,7 +1017,8 @@ WHERE student_id NOT IN (
             SELECT student_id, term_year, term
             FROM CurrentTerm))
 
--- Student & (Enroll \ StudentMajor & CurrentTerm)
+--     Student & (Enroll \ 
+--             StudentMajor & CurrentTerm)
 SELECT *
 FROM Student 
 WHERE student_id IN (
@@ -1000,7 +1031,7 @@ WHERE student_id IN (
                 SELECT term_year, term
                 FROM CurrentTerm))
 
--- Student & [Enroll, StudentMajor]
+--     Student & [Enroll, StudentMajor]
 SELECT * 
 FROM Student
 WHERE student_id IN (
