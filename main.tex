@@ -82,7 +82,7 @@
 \begin{abstract}
 Proposed here is a simplified and conceptually refined relational data model named \datajoint. 
 The model includes a language for schema definition, a language for data queries, and diagramming notation for visualizing entities and relationships among them.  
-The model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- must exist as sets of entities where elements of each entity set belong to one well-defined entity type.
+The model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- must be represented as well-formed entity sets.
 \datajoint's data query language is an algebra on entity sets with five operators that provide matching capabilities to those of other relational query languages with greater clarity due to entity normalization. 
 Practical implementations of \datajoint in MATLAB and Python have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
 \end{abstract}
@@ -404,7 +404,7 @@ points : decimal(3,2)
 A major ingredient of \emph{data integrity} is \emph{entity integrity}: identifiability and uniqueness of entity representations in the database. 
 {Primary keys} are the principal tool for communicating and enforcing entity integrity. 
 Any entity set must have a primary key: a set of attributes that, jointly, distinguish elements of the relation from each other.
-No two elements of the same entity set can share the same value of the primary key or, in other words, the same combination of values of primary attributes.
+No two elements of the same entity set can share the same value of the primary key or, in other words, the same combination of values of the primary attributes.
 
 In each table declaration (e.g.\ Listings \ref{lst:uni1} and \ref{lst:uni2}), the dividing line \lstinline$---$ separates the \emph{primary key} attributes above from other attributes below.  
 Each entity set must have a primary key although it may comprise multiple attributes. 
@@ -470,11 +470,11 @@ In the simpler use cases shown in Listings \ref{lst:uni1} and \ref{lst:uni2}, th
 Section \ref{sec:dep} describes more general cases when \lstinline$Ref$ may be derived entity sets.
 
 \subsubsection{Effects of dependencies}\label{sec:effects}
-If the new table is \lstinline$Dependent$, then this declaration has the following effects: 
+If the new table \lstinline$Dependent$ declares the dependency \lstinline$-> Ref$, then this declaration has the following effects: 
 \begin{enumerate}
 \item The primary key attributes of \lstinline$Ref$ are added to the definition of \lstinline$Dependent$ skipping those that are already present in the definition.
 \item The referential constraint is created prohibiting tuples in \lstinline$Dependent$ without \emph{matching} entries in \lstinline$Ref$.
-\item An index is created in \lstinline$Dependent$ to accelerate searches in \lstinline$Dependent$ given primary key values of \lstinline$Ref$.
+\item An index is created in \lstinline$Dependent$ for fast search in \lstinline$Dependent$ given primary key values of \lstinline$Ref$.
 \end{enumerate}
 
 The referential constraint is enforced by (a) prohibiting inserts into \lstinline$Dependent$ of elements that are missing the matching elements in \lstinline$Ref$ and (b) propagating deletes from \lstinline$Ref$ to \lstinline$Dependent$ of all matching tuples.
@@ -494,7 +494,6 @@ Primary dependencies indicates a much closer \emph{defining relationship} betwee
 
 For example, the entity set \lstinline$StudentMajor$ declares a primary dependency onto \lstinline$Student$ and a secondary dependency onto \lstinline$Department$ (Listing \ref{lst:uni1} and Figure \ref{fig:erd}).
 
-
 \subsubsection{Acyclicity}
 In \datajoint, the graph of dependencies never contains loops or cycles.  
 In other words, any dependency diagram is an \emph{acyclic directed graph}.
@@ -503,6 +502,10 @@ However, we find that conceptual complications arising from cyclic dependencies 
 
 The acyclicity of dependencies in the model does not mean that the model is not capable of representing cyclic \emph{relationships}. 
 However, it does mean that sometimes an extra entity set is necessary to represent cyclic relationships. 
+
+\subsubsection{Semantics of dependencies}\label{sec:semantics}
+In \datajoint, dependencies are established between entire entities rather than between attributes of entities.  
+When entity set \lstinline$B$ depends on entity set \lstinline$A$ by means of a foreign key constraint, all attributes of their elements are thought to be constructed with respect to all attributes of the referenced elements of \lstinline$A$.
 
 \section{Data manipulation}\label{sec:manip}
 The two basic commands for data manipulation are \emph{insert} and \emph{delete} to add or remove new elements (tuples) into base entity sets.
@@ -799,7 +802,7 @@ Student.proj(first_name, last_name)
 Student.proj()
 \end{lstlisting}
 
-\subsubsection{Renaming attributes}
+\subsubsection{Renamed attributes}
 When the attribute specification in a projection call is the form \lstinline$new: old$, this renames an existing attribute in the relation from \emph{old} to \emph{new}.
 
 For example, the result of the query in Listing \ref{lst:ren1} renames attribute \lstinline$dept$ into \lstinline$major$.
@@ -930,11 +933,11 @@ SameBirthday = Student * s &
 \end{lstlisting}
 
 \subsection{No outer joins}
-Outer joins in relational algebra and SQL are joins that mix  all the elements  of the first operand (\emph{left outer join}), second operand (\emph{right outer join}), or both (\emph{full outer join}) into the result of the regular, inner join of the two operands. 
-Outer joins violate the concept of operational entity normalization (Sections \ref{sec:norm} and \ref{sec:operational}) due to the mixing into one relation entities of different types with different primary keys.
-The primary key of an outer join is poorly defined and may have nulls in it, violating entity integrity.
-In common usage, outer joins are mostly used to prepare input for a \lstinline$GROUP BY$ operation. 
-\datajoint's \lstinline$aggr$ operator accomplishes both steps as a single operator that observes operation entity normalization.
+In relational algebra and SQL, an outer join of relations \lstinline$A$ and \lstinline$B$ adds to its output all the elements of \lstinline$A$ (\emph{left outer join}) or  \lstinline$B$ (\emph{right outer join}), or both (\emph{full outer join}) in addition to the entire result of the inner joins. 
+Outer joins contradict the concept of entity normalization (Sections \ref{sec:norm} and \ref{sec:operational}) because it mixes entity types with different primary keys into a single relation.
+The primary key of an outer join is poorly defined and may have nulls in it, breaking entity integrity.
+Outer joins are commonly used to prepare input into a \lstinline$GROUP BY$ operation.
+\datajoint's \lstinline$aggr$ operator accomplishes both steps (left join and \lstinline$GROUP BY$) as a single operator, always observing entity normalization in its operations and reducing the need for outer joins.
 
 
 \section{Advanced schema definition}\label{sec:def2}
