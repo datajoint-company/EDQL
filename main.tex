@@ -313,8 +313,11 @@ first_name      : varchar(40)
 last_name       : varchar(40)
 sex             : enum('F', 'M', 'U')
 date_of_birth   : date
-student_address : varchar(200) # mailing address
-student_phone   : varchar(14) 
+home_address    : varchar(200) # street address
+home_city       : varchar(30) 
+home_state      : char(2)  # two-letter abrreviation
+home_zipcode    : char(10)
+home_phone      : varchar(14) 
 
 ::Department 
 dept : char(6)   # abbreviated department name, e.g. BIOL
@@ -905,7 +908,65 @@ Aggregation functions cannot be used in restrictions.
 
 \subsection{Union}\label{sec:union}
 
-\subsection{Entity U}\label{sec:u}
+\subsection{Entity Set U}\label{sec:u}
+\emph{Entity Set U} is a virtual entity set used to construct a great variety of queries that would be otherwise impossible under \datajoint's strict operational entity normalization (See \ref{sec:operational}).
+
+All \datajoint operators must take valid entity sets as inputs and produce entity sets derived from them.  
+However, in some cases the appropriate entity set does not exist.  
+Entity Set U allows creating a virtual entity to fulfill the role.
+Entity Set U stands for the ``Universal'' set of entities for the given primary key.
+It has the form \lstinline$U(attr1, ..., attrN)$ and is defined as the entity set with primary attributes \lstinline$attr1$, $\ldots$, \lstinline$attrnN$ and no secondary attributes.
+Entity Set U contains all possible combination of attribute values of all data types.
+When the attribute list is empty, \lstinline$U()$ has exactly one element with zero attributes; or it may be thought of as having one phantom attribute $\omega$ (Section \ref{sec:phantom}).
+With any other number of attributes, the number of elements in entity U is effectively infinite.
+
+Imagine we needed to query the University database for the complete list of students' home cities and get the number of students from each city.
+The University database lacks the entity set for cities and states. 
+We could create the virtual entity set \lstinline$U(home_city, home_state)$.
+Although the virtual entity set is nameless, its primary key makes clear what type of entity class it represents.
+
+\begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:city}]
+# All home cities of students 
+U(home_city, home_state) & Student 
+
+# Total number of students from each city
+U(home_city, home_state).aggr(
+            Student, n: count())
+
+# Total number of students from each state
+U(home_state).aggr(Student, n: count())
+
+# Total number of students in the database
+U().aggr(Student, n: count())
+\end{lstlisting}
+
+
+We could define base entities \lstinline$City$ and \lstinline$State$ and then use them in \lstinline$Student$ as follows.
+\begin{lstlisting}[language=dj, label={lst:city}]
+::State
+state char(2) :  two-letter acronym 
+---
+state_name : varchar(20) #  full state name
+
+::City
+city : varchar(30)
+-> State
+
+::Student     
+student_id : int unsigned   # university-wide ID number 
+---
+first_name      : varchar(40)
+last_name       : varchar(40)
+sex             : enum('F', 'M', 'U')
+date_of_birth   : date
+home_address    : varchar(200) # street address
+-> City.proj(home_city: city, home_state: tate),
+home_zipcode    : char(10)
+home_phone      : varchar(14) 
+\end{lstlisting}
+
+Then the query \lstinline$State & Student$ would yield all home states for students in the database.
+
 \begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:u1}]
 # All home states
 U(home_state) & Student
@@ -989,7 +1050,8 @@ Edgar Y.\ Walker and Fabian Sinz have been principal contributors to the \datajo
 Jacob Reimer and Emmanouil Froudarakis became early adopters within Andreas Tolias' Lab and propelled development.
 Outside the Tolias lab, the first labs to adopt \datajoint (approx.\ 2010) were the labs of Athanassios G.\ Siapas at CalTech, Laura Busse and Steffen Katzner at the University of T\"ubingen.
 In 2017, DARPA awarded a small-business innovation research grant to Vathes LLC (Contract D17PC00162) to further develop and publicize the \datajoint framework. 
-In June 2018, the Princeton Neuroscience Institute funded a project to generate a DataJoint user manual.  
+In June 2018, the Princeton Neuroscience Institute, under the leadership of Prof.\ Carlos Brody, began funding a project to generate a detailed DataJoint user manual.  
+
 \begin{appendices}
 
 \section{SQL Translations}
@@ -1002,6 +1064,11 @@ CREATE TABLE Student (
    last_name varchar(40) NOT NULL,
    sex enum('F', 'M', 'U') NOT NULL, 
    date_of_birth date NOT NULL,
+   home_address varchar(200) NOT NULL COMMENT "street address",
+   home_city varchar(30) NOT NULL,
+   home_state char(2) NOT NULL COMMENT "two-letter abbreviation",
+   home_zipcode varchar(10) NOT NULL,
+   home_phone varchar(14) NOT NULL, 
    PRIMARY KEY (student_id))
 
 CREATE TABLE Department(
