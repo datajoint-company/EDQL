@@ -88,7 +88,7 @@ Proposed here is a simplified and conceptually refined relational data model nam
 The model includes a language for schema definition, a language for data queries, and diagramming notation for visualizing entities and relationships among them.  
 The model adheres to the principle of \emph{entity normalization}, which requires that all data --- both stored and derived --- must be represented as well-formed entity sets.
 \datajoint's data query language is an algebra on entity sets with five operators that provide matching capabilities to those of other relational query languages with greater clarity due to entity normalization. 
-Practical implementations of \datajoint in MATLAB and Python have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
+Practical implementations of \datajoint have been adopted in several neuroscience labs for fluent interaction with scientific data pipelines.
 \end{abstract}
 \tableofcontents 
 
@@ -173,7 +173,7 @@ Table \ref{tab:terms} correlates equivalent terms used in different variants of 
 \label{tab:terms}
 \end{table*}
 
-\subsection{Conceptual Ambiguity}
+\subsection{Conceptual ambiguity}
 The relational model is abstract and semantically unconstrained, providing few guidelines for translating problems into database schemas or for forming valid queries. 
 Learning to design and query databases for practical problems requires \emph{conceptual clarification}: developing intuition and techniques for mapping real-world rules onto the concepts of the relational data model from Table \ref{tab:core}.
 
@@ -247,15 +247,17 @@ In an ERM-tailored language, the equivalent foreign key definition could become 
 \end{lstlisting}
 if the referencing attribute names are the same as the referenced names.
 
-The simplified definition combines two jobs into a single step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definition are not only more terse but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
+The simplified definition combines two jobs into a single step:  add the referencing attributes to the table definition (if not already added) and create the foreign key constraints.  These definitions are not only more succinct but are less error-prone since changes in the definitions of the referenced table would automatically and correctly propagate to the referencing table. 
 
-This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they typically follow ERM conventions. What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. Perhaps the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
+This syntax simplification would serve well in the majority (perhaps 99\%) of common uses of foreign keys since they typically follow ERM conventions. 
+What should be done for the more esoteric uses of the relational model that define foreign keys referencing non-primary key attributes of the referenced table (For example, fifth normal form)?  Perhaps we could add special syntax to accommodate such rare cases. 
+We argue that  the preferred solution is to simply accept the loss of representational power for the arguably more valuable gain in conceptual clarity. 
 
 Since ERM constrains schema definitions, it reduces the representational power of the general relational data model and skirts around some of its more esoteric capabilities. 
 For example, ERM is incapable of representing multiple functional dependencies between overlapping sets of attributes whereas the broader relational theory can accomplish such feats through use of referential constraints prohibited in ERM {\em cf.\ fifth normal form}.
 Giving up some representational power was deemed a fair tradeoff for increased conceptual clarity.  The gain in conceptual clarity for practical database design processes was thought to outweigh the loss of capabilities.
 
-\subsection{\datajoint Model}
+\subsection{The \datajoint model}
 \datajoint embodies a single coherent data model that is sufficient for clear conceptual modeling, efficient schema design, and precise and flexible data queries. 
 Similar to ERM, \datajoint is a conceptual clarification of the relational data model.  
 But it differs from ERM in several key ways. 
@@ -288,7 +290,7 @@ A well-formed entity set is a relation that meets the following criteria:
 Adherence to entity integrity is the common thread unifying \datajoint's data definition language, data manipulation language, and data query language. 
 \datajoint respects entity normalization in both base relations and derived relations resulting from query operations (Sec.\ \ref{sec:query}.  
 In schema design, entity normalizations serves as the guiding principle for efficient and sensible design.
-For queries, \datajoint's relational operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
+\datajoint's query operators are designed so that each intermediate result constitutes a valid entity set meeting all the above criteria.
 
 Entity normalization bears parallels with two concepts from conventional relational database theory: \emph{normal forms} and the \emph{entity integrity constraint}.
 Decomposition  of data into entity sets that meet Criteria 1--5 ensure that the schema meets the criteria defined by the Boyce-Codd normal form.
@@ -409,11 +411,13 @@ points : decimal(3,2)
 
 
 \subsection{Primary key}
+\subsubsection{Role in entity integrity}
 A major ingredient of \emph{data integrity} is \emph{entity integrity}: identifiability and uniqueness of entity representations in the database. 
 {Primary keys} are the principal tool for communicating and enforcing entity integrity. 
 Any entity set must have a primary key: a set of attributes that, jointly, distinguish elements of the relation from each other.
 No two elements of the same entity set can share the same value of the primary key or, in other words, the same combination of values of the primary attributes.
 
+\subsubsection{Declaration syntax}
 In each table declaration (e.g.\ Listings \ref{lst:uni1} and \ref{lst:uni2}), the dividing line \lstinline$---$ separates the \emph{primary key} attributes above from other attributes below.  
 Each entity set must have a primary key although it may comprise multiple attributes. 
 For brevity, we refer to the attributes in the primary key as \emph{primary attributes} and all others as \emph{secondary attributes}.
@@ -425,13 +429,14 @@ Consequently, any element can be uniquely identified by \lstinline$student_id$ a
 The primary key of entity set \lstinline$Term$ (Listing \ref{lst:uni2}) contains two attributes: \lstinline$term_year$ and \lstinline$term$.
 This means that a pair of elements of \lstinline$Term$ can be in the same \lstinline$term_year$ or in the same \lstinline$term$ but cannot be together in both. 
 
+\subsubsection{Empty primary key}
 If the primary key of a particular entity set contains zero attributes, it cannot distinguish any two elements within the set.  
 Consequently, an entity set with an empty primary key can contain only one element at most.
 This makes sense for entity set \lstinline$CurrentTerm$ in Listing \ref{lst:uni2}, which contains the value of the academic term currently in session; and only one session can be current at any time.
 
 \subsubsection{Phantom attribute $\omega$}\label{sec:phantom}
 In explaining the \datajoint data model, we find helpful to introduce the concept of the phantom attribute $\omega$ that is always present in the primary key of any entity set.  
-The domain of $\omega$ contains only one element, \lstinline$"1"$, which is also the default value for $\omega$.
+The domain of $\omega$ contains only one element, say, \lstinline$"1"$, which is also the default value for $\omega$.
 The phantom attribute is entirely contrived since it carries no information: all elements of any entity set would always have the same value for this attribute.
 However, the phantom attribute may help in conceptual understanding and interpretation of the model.
 For example, one may think of the empty primary key of \lstinline$CurrentTerm$ as rather a primary key comprising only the phantom attribute $\omega$, which can only take on one value.
@@ -445,7 +450,7 @@ For \datajoint, we dismiss the concept of surrogate keys as logically incongruou
 Namely, the important question to ask about any entity set is:
 \begin{quote}
 \em
-Does the overall process ensure a unique mapping between the primary key values of the entity set and the real entities that it claims to represent?
+Does the overall data management process ensure a unique mapping between the primary key values of the entity set and the real entities that it claims to represent?
 \end{quote}
 
 If the answer is \emph{yes}, then it matters not whether the primary key values are generated by the database system or come from the ``real world''. 
@@ -509,7 +514,9 @@ This constraint may seem unnecessary since the model can be straightforwardly ex
 However, we find that conceptual complications arising from cyclic dependencies are not worth the benefits that they bring and we make the \emph{acyclicity} of dependencies a key property of the \datajoint model.
 
 The acyclicity of dependencies in the model does not mean that the model is not capable of representing cyclic \emph{relationships}. 
-However, it does mean that sometimes an extra entity set is necessary to represent cyclic relationships. 
+However, an extra entity set is sometimes necessary for the representation of cyclic relationships. 
+
+With acyclicity, the relative positions of base entity sets may be described as ``upstream'' and ``downstream''.
 
 \subsubsection{Semantics of dependencies}\label{sec:semantics}
 In \datajoint, dependencies are established between entire entities rather than between attributes of entities.  
@@ -545,7 +552,7 @@ delete Student & student_id > 500 & student_id <= 1000
 
 \subsection{Cautious updates}
 The \emph{update} operation modifies the values of individual attributes in an entity set.
-Although very common in other data models, updates are used sparingly in \datajoint. 
+Although common in other data models, updates are avoided in \datajoint and only used in exceptional cases.
 The principal way to change the state of a \datajoint database is to delete and insert subsets of entire entities with all their attribute values already set. 
 
 Updating values in place is a precarious proposition from the point of view of data integrity. 
@@ -567,12 +574,13 @@ update Student & student_id == 1001:
     phone = "(713)555-1040x101"
 \end{lstlisting}
 
-\section{Query Expressions}\label{sec:query}
+\section{Queries}\label{sec:query}
 
-\subsection{Relational operators and expressions}
-Query expressions use \emph{relational operators} to combine base entity sets to form new \emph{derived entity sets} for precise data queries.
-The result of a data query is a symbolic representation of the derived entity set: when the state of the database changes, so does the result of a query expression.
-\datajoint has only six relational operators summarized in Table \ref{tab:operators}.
+\subsection{Expressions and operators}
+In \datajoint, data queries have the form of \emph{relational expresssions}. 
+Query expressions use \emph{query operators} to combine base entity sets to form new \emph{derived entity sets} for precise data queries.
+Relational expressions are symbolic representations of derived entity sets: when the state of the database changes, so does the result of the query expression.
+\datajoint has only six query operators summarized in Table \ref{tab:operators}.
 \datajoint's query expressions are \emph{algebraically closed}:  derived entity sets can be assigned to variables or used in other expressions to formulate ever more exact or complex queries.
 
 \begin{table}[ht]
@@ -599,16 +607,16 @@ Any operator produces a well-defined entity class with a designated primary key.
 We refer to this property of \datajoint expressions as \emph{operational entity normalization}. 
 Operational entity normalization sets apart from other relational query languages, which limit the formal application of concepts of normalization and entity integrity to base entity sets.
 
-\subsection{Matching attributes}\label{sec:match}
+\subsection{Homologous attributes}\label{sec:match}
 The binary operators in query expressions (join, restriction,  exclusions, and aggregation) require matching attributes in the two arguments for the equality comparison underlying the operation. 
 The choice of the attributes to match define the semantics of the operation. 
-In other relational querly languages, the matching attributes must be specified explicitly in each operator, forcing developers to examine the semantics of the attributes and to write unwieldly queries.
+In other relational query languages, the matching attributes must be specified explicitly in each operator, forcing developers to examine the semantics of the attributes and to write unwieldy queries.
 One shortcut to specifying matching attributes in relational algebra and SQL is used in the \emph{natural join}, where attributes are considered matching when they share the same name, based on the assumption that attributes with the same name are related semantically to correctly restrict the result.
 However, natural joins lead to frequent mistakes in cases when unrelated attributes happen to share the same names.
 
-\datajoint has a single uniform method to define the semantic of binary operators through matching attributes.  
-In this method, the matching attributes are those that share the same names in both operands of the binary operator \emph{and} trace their origin through foreign keys to the same original primary attribute of the same base entity set.
-This approach ensures that the matching operators have the same meaning. 
+\datajoint offers  a single uniform method for defining the semantics of binary operators through the notion of \emph{homologous attributes}.  
+A homologous attribute pair is an attribute that is present in both operands of a query operator and traces ts origin through foreign keys to the same original primary attribute in the same upstream base entity set.
+Homologous attributes stem from the same definition and can be assumed to have the same meaning. 
 
 For example, the entity sets \lstinline$StudentMajor$ and \lstinline$Enroll$ (Listings \ref{lst:uni1} and \ref{lst:uni2} Figure \ref{fig:erd}) have matching attributes \lstinline$student_id$ and \lstinline$dept$, which they acquire through a series of dependencies from the primary key of \lstinline$Student$ and \lstinline$Department$, respectively.  
 
@@ -795,7 +803,7 @@ Student * Enroll & (term_year <= date_of_birth)
 \subsection{Projection}\label{sec:proj}
 The projection operator \lstinline$A.proj(attr1, ..., attrN$ is a unary operator on the input entity set \lstinline$A$.  
 Its output is an entity set with the same entity type and the same number of elements as \lstinline$A$ with some attributes renamed, some secondary attributes omitted, or new calculated attributes introduced.
-A single projection operator can perform any compbination of all three of these functions in a single invocation. 
+A single projection operator can perform any combination of all three of these functions in a single invocation. 
 
 \subsubsection{Attribute selection}
 Projection omits all secondary attributes except those listed as arguments;
@@ -904,9 +912,10 @@ Student.aggr(graded & CurrentTerm,
     gpa: sum(points * credits) / sum(credits))
 \end{lstlisting}
 
-Aggregation functions cannot be used in restrictions. 
-
 \subsection{Union}\label{sec:union}
+The output of the union operator \lstinline$A + B$ contains all elements of both \lstinline$A$ and \lstinline$B$.  
+From the principle of entity normalization, both operands must belong of the same entity type and must have the same primary key.
+If \lstinline$A$ and \lstinline$B$ have secondary attributes, the ones with the same name must be homologous.
 
 \subsection{Entity Set U}\label{sec:u}
 \emph{Entity Set U} is a virtual entity set used to construct a great variety of queries that would be otherwise impossible under \datajoint's strict operational entity normalization (See \ref{sec:operational}).
@@ -922,7 +931,7 @@ With any other number of attributes, the number of elements in entity U is effec
 
 Imagine we needed to query the University database for the complete list of students' home cities and get the number of students from each city.
 The University database lacks the entity set for cities and states. 
-We could create the virtual entity set \lstinline$U(home_city, home_state)$.
+The virtual entity set \lstinline$U(home_city, home_state)$ can play the role of the base entity set for cities.
 Although the virtual entity set is nameless, its primary key makes clear what type of entity class it represents.
 
 \begin{lstlisting}[language=Python, morekeywords={avg, U}, caption={Creating a new entity.}, label={lst:city}]
@@ -1037,9 +1046,6 @@ However, some lack of conceptual clarity of SQL and the relational data model ma
 As a result, the field has converged on the understanding that database design consists of two distinct components: \emph{conceptual modeling} and \emph{logical modeling} leading to physical implementation. 
 Although the Entity Relationship Model was proposed as a model suitable for both conceptual modeling and definition of database schemas, it never replaced the refined data definition languages and evolved into a tool limited to conceptual modeling.  
 Furthermore, the ERM's conceptual clarifications chiefly pertain to schema definition and do not provide a data query language with the same level conceptual clarification for derived results as for stored data.
-
-The relational data model and its query languages relational algebra and relational calculus are not concerned with observing. 
-SQL is implemented to support the general unrefined relational data model while also deviating from it in significant ways. 
 
 \section{Acknowledgements}
 We conceived \datajoint in Andreas S.\ Tolias' lab in the Neuroscience Department at Baylor College of Medicine in the fall of 2009. 
